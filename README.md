@@ -6,21 +6,21 @@ Apuntes y material de repaso sobre **Machine Learning** y **Deep Learning**. El 
 
 ### Fundamentos y modelos clásicos
 
-- [Tema 1 — Foundations of Machine Learning: Classical Models & Clustering](<Apuntes del Tema 1: Foundations of Machine Learning — Classical Models & Clustering.md>)
-- [Tema 2 — Ensemble Models & Multiclass Decomposition](<Apuntes del Tema 2: Ensemble Models & Multiclass Decomposition>)
-- [Temas 3 y 4 — Modelos Lineales: Regresión Lineal y Regresión Logística](<Apuntes del Tema 3 y Tema 4: Modelos Lineales — Regresión Lineal y Regresión Logística>)
+- [Tema 1 — Foundations of Machine Learning: Classical Models & Clustering](<apuntes/Apuntes del Tema 1 - Foundations of Machine Learning — Classical Models & Clustering.md>)
+- [Tema 2 — Ensemble Models & Multiclass Decomposition](<apuntes/Apuntes del Tema 2 - Ensemble Models & Multiclass Decomposition>)
+- [Temas 3 y 4 — Modelos Lineales: Regresión Lineal y Regresión Logística](<apuntes/Apuntes del Tema 3 y Tema 4 - Modelos Lineales — Regresión Lineal y Regresión Logística>)
 
 ### Redes neuronales y optimización
 
-- [Tema 5 — Multilayer Perceptron (MLP I y II)](<Apuntes del Tema 5: Multilayer Perceptron (MLP I y II)>)
-- [Tema 6 — Regularización en Redes Profundas](<Apuntes del Tema 6: Regularización en Redes Profundas>)
-- [Tema 8 — Descenso de Gradiente, Métodos Acelerados y Adaptativos](<Apuntes del Tema 8: Descenso de Gradiente, Métodos Acelerados y Adaptativos>)
+- [Tema 5 — Multilayer Perceptron (MLP I y II)](<apuntes/Apuntes del Tema 5 - Multilayer Perceptron (MLP I y II)>)
+- [Tema 6 — Regularización en Redes Profundas](<apuntes/Apuntes del Tema 6 - Regularización en Redes Profundas>)
+- [Tema 8 — Descenso de Gradiente, Métodos Acelerados y Adaptativos](<apuntes/Apuntes del Tema 8 - Descenso de Gradiente, Métodos Acelerados y Adaptativos>)
 
 ### Deep Learning y arquitecturas modernas
 
-- [Tema 9 — Redes Neuronales Convolucionales (CNN I y II)](<Apuntes del Tema 9: Redes Neuronales Convolucionales (CNN I y II)>)
-- [Tema 10 — Redes Neuronales Recurrentes](<Apuntes del Tema 10: Redes Neuronales Recurrentes>)
-- [Tema 11 — Attention Mechanisms and Transformers](<Apuntes del Tema 11: Attention Mechanisms and Transformers>)
+- [Tema 9 — Redes Neuronales Convolucionales (CNN I y II)](<apuntes/Apuntes del Tema 9 - Redes Neuronales Convolucionales (CNN I y II)>)
+- [Tema 10 — Redes Neuronales Recurrentes](<apuntes/Apuntes del Tema 10 - Redes Neuronales Recurrentes>)
+- [Tema 11 — Attention Mechanisms and Transformers](<apuntes/Apuntes del Tema 11 - Attention Mechanisms and Transformers>)
 
 ## Objetivo
 

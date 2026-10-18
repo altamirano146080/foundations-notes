@@ -1,0 +1,486 @@
+\documentclass[11pt,oneside]{article}
+\newcommand{\TopicTitle}{Apuntes del Tema 10: Redes Neuronales Recurrentes}
+\input{template.tex}
+\begin{document}
+\topiccover{Apuntes del Tema 10: Redes Neuronales Recurrentes}
+\tableofcontents
+\clearpage
+\markboth{Apuntes del Tema 10: Redes Neuronales Recurrentes}{Apuntes del Tema 10: Redes Neuronales Recurrentes}
+\section{Apuntes del Tema 10: Redes Neuronales Recurrentes}
+
+\subsection{1. De Datos Estáticos a Datos Secuenciales}
+
+\subsubsection{1.1 Limitaciones de los Modelos Feedforward (MLPs y CNNs)}
+
+\begin{itemize}
+
+\item \textbf{Asunción de Muestras Independientes (\(i.i.d.\)):} Los modelos tradicionales como los Perceptrones Multicapa (MLP) o las Redes Convolucionales (CNN) asumen que las muestras de entrada son independientes e idénticamente distribuidas.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Entradas de Tamaño Fijo:} Un MLP o una CNN requieren un vector o tensor de dimensiones de entrada rígidamente predefinidas.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Incapacidad para Capturar Dependencias Temporales:} En datos con orden temporal o secuencial (como texto, audio, series temporales financieras o trayectorias GPS), la información del elemento actual depende de los elementos anteriores.
+
+\end{itemize}
+
+\subsubsection{1.2 Modelos Autorregresivos y el Estado Oculto}
+
+Para modelar secuencias \(X = (x_1, x_2, \dots, x_T)\), deseamos estimar la probabilidad conjunta mediante la regla de la cadena de probabilidades:
+
+\[P(x_1, x_2, \dots, x_T) = \prod_{t=1}^{T} P(x_t \mid x_1, \dots, x_{t-1})\]
+
+\begin{itemize}
+
+\item \textbf{Modelos de Marcov (Orden \(k\)):} Asumen que \(x_t\) solo depende de los \(k\) pasos anteriores.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item **Mecanismo de Estado Oculto (\emph{Hidden State}):\textbf{ En lugar de truncar la historia a \(k\) pasos, una Red Neuronal Recurrente (RNN) mantiene un }estado latente \(h_t\)** que actúa como una memoria comprimida de toda la secuencia procesada desde \(t=1\) hasta \(t-1\).
+
+\end{itemize}
+
+\subsection{2. Arquitectura de la Red Neuronal Recurrente Básica (RNN Vanilla)}
+
+\subsubsection{2.1 Ecuaciones del Estado Oculto y Salida}
+
+En cada paso de tiempo \(t\), la RNN recibe la entrada actual \(x_t \in \mathbb{R}^d\) y el estado oculto del paso anterior \(h_{t-1} \in \mathbb{R}^h\).
+
+\begin{enumerate}
+
+\item \textbf{Actualización del Estado Oculto:}
+
+\end{enumerate}
+
+\[h_t = \phi\left(x_t W_{xh} + h_{t-1} W_{hh} + b_h\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Cálculo de la Salida:}
+
+\end{enumerate}
+
+\[\hat{y}_t = \text{Softmax}\left(h_t W_{hq} + b_q\right) \quad \text{o} \quad o_t = h_t W_{hq} + b_q\]
+
+donde:
+
+\begin{itemize}
+
+\item \(W_{xh} \in \mathbb{R}^{d \times h}\): Matriz de pesos para la entrada.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \(W_{hh} \in \mathbb{R}^{h \times h}\): Matriz de pesos para la transición recurrente de estados.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \(W_{hq} \in \mathbb{R}^{h \times q}\): Matriz de pesos para la capa de salida.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \(\phi(\cdot)\): Función de activación no lineal (típicamente \(\tanh\) o \(\text{ReLU}\)).
+
+\end{itemize}
+
+\begin{quote}**Compartición de Pesos (\emph{Weight Sharing} Temporal):** Las matrices de pesos \(\{W_{xh}, W_{hh}, W_{hq}\}\) son exactamente las mismas en todos los pasos de tiempo \(t=1, \dots, T\).\end{quote}
+
+\begin{quote}\end{quote}
+
+\begin{quote}\end{quote}
+
+\begin{lstlisting}
+
+Estructura Desplegada en el Tiempo (Unfolded RNN):
+
+
+
+  y_1         y_2                 y_T
+
+   ▲           ▲                   ▲
+
+   │           │                   │
+
+┌─────┐     ┌─────┐             ┌─────┐
+
+│ h_1 │───► │ h_2 │───► ... ───►│ h_T │
+
+└─────┘ W_hh└─────┘ W_hh        └─────┘
+
+   ▲           ▲                   ▲
+
+   │ W_xh      │ W_xh              │ W_xh
+
+  x_1         x_2                 x_T
+
+
+
+\end{lstlisting}
+
+\subsection{3. Entrenamiento: Retropropagación a través del Tiempo (BPTT)}
+
+\subsubsection{3.1 Backpropagation Through Time (BPTT)}
+
+Para entrenar las RNNs, la red recurrente se "despliega" a lo largo de los \(T\) pasos temporales formando un grafo acíclico dirigido. La pérdida total es la suma de las pérdidas en cada paso de tiempo:
+
+\[\mathcal{L}(W) = \sum_{t=1}^{T} \mathcal{L}_t(y_t, \hat{y}_t)\]
+
+Para calcular el gradiente respecto a la matriz de transición recurrente \(W_{hh}\), se aplica la regla de la cadena acumulando las dependencias pasadas:
+
+\[\frac{\partial \mathcal{L}_t}{\partial W_{hh}} = \sum_{k=1}^{t} \frac{\partial \mathcal{L}_t}{\partial h_t} \cdot \left( \prod_{j=k+1}^{t} \frac{\partial h_j}{\partial h_{j-1}} \right) \cdot \frac{\partial h_k}{\partial W_{hh}}\]
+
+\subsubsection{3.2 Problema Crítico: Desvanecimiento y Explosión del Gradiente}
+
+El término \(\prod_{j=k+1}^{t} \frac{\partial h_j}{\partial h_{j-1}}\) implica multiplicar repetidamente la matriz de pesos \(W_{hh}^\top\).
+
+\begin{itemize}
+
+\item **Desvanecimiento del Gradiente (\emph{Vanishing Gradients}):\textbf{ Si los autovalores de \(W_{hh}\) son menores a \(1\), la magnitud del gradiente decrece exponencialmente hacia cero cuando la secuencia es larga (\(T \gg 0\)). La red }olvida las dependencias a largo plazo**.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item **Explosión del Gradiente (\emph{Exploding Gradients}):\textbf{ Si los autovalores son mayores a \(1\), el gradiente crece exponencialmente destruyendo el entrenamiento. Se soluciona mediante }Gradient Clipping**:
+
+\end{itemize}
+
+\[g \leftarrow \min\left(1, \frac{\theta}{\Vert{}g\Vert{}}\right) g\]
+
+\subsection{4. Redes Gated: LSTM y GRU}
+
+Para solucionar el desvanecimiento de gradiente y permitir recordar información a largo plazo, se crearon arquitecturas basadas en puertas de control (\emph{gates}).
+
+\subsubsection{4.1 LSTM (\emph{Long Short-Term Memory})}
+
+La LSTM sustituye la celda estándar por una estructura de memoria que mantiene un \textbf{estado de celda \(C_t\)} (\emph{Cell State} o autopista de información) y un \textbf{estado oculto \(h_t\)}.
+
+\begin{lstlisting}
+
+             ┌──────────────────────────────────────────────┐ (Cell State C_t)
+
+             │                 x (f_t)        + (i_t * C~_t)│
+
+C_{t-1} ─────┴─────────────────┴──────────────┴─────────────┴────────► C_t
+
+                   ▲                ▲         ▲          ▲
+
+                   │                │         │          │
+
+h_{t-1} ─┬─────────┼───────────────┼─────────┼──────────┼─────────┬──► h_t
+
+         │         │                │         │          │         │
+
+x_t ─────┴─► [Forget Gate]    [Input Gate] [Candidate] [Output Gate]
+
+
+
+\end{lstlisting}
+
+\subsubsection{Puertas y Ecuaciones Matemáticas de la LSTM:}
+
+\begin{enumerate}
+
+\item \textbf{Forget Gate (\(f_t\)):} Decide qué información descartar del estado de celda anterior.
+
+\end{enumerate}
+
+\[f_t = \sigma\left(x_t W_{xf} + h_{t-1} W_{hf} + b_f\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Input Gate (\(i_t\)) y Candidato (\(\tilde{C}_t\)):} Deciden qué nueva información almacenar.
+
+\end{enumerate}
+
+\[i_t = \sigma\left(x_t W_{xi} + h_{t-1} W_{hi} + b_i\right)\]
+
+\[\tilde{C}_t = \tanh\left(x_t W_{xc} + h_{t-1} W_{hc} + b_c\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Actualización del Cell State (\(C_t\)):}
+
+\end{enumerate}
+
+\[C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t\]
+
+\begin{enumerate}
+
+\item \textbf{Output Gate (\(o_t\)) y Estado Oculto (\(h_t\)):}
+
+\end{enumerate}
+
+\[o_t = \sigma\left(x_t W_{xo} + h_{t-1} W_{ho} + b_o\right)\]
+
+\[h_t = o_t \odot \tanh(C_t)\]
+
+\subsubsection{4.2 GRU (\emph{Gated Recurrent Unit})}
+
+Variante simplificada de la LSTM que combina el estado de celda y el estado oculto en una sola variable \(h_t\), reduciendo el coste computacional y el número de parámetros.
+
+\begin{enumerate}
+
+\item \textbf{Reset Gate (\(r_t\)):} Determina cuánta información del pasado olvidar:
+
+\end{enumerate}
+
+\[r_t = \sigma\left(x_t W_{xr} + h_{t-1} W_{hr} + b_r\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Update Gate (\(z_t\)):} Actúa simultáneamente como puerta de olvida e entrada:
+
+\end{enumerate}
+
+\[z_t = \sigma\left(x_t W_{xz} + h_{t-1} W_{hz} + b_z\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Candidato de Estado Oculto (\(\tilde{h}_t\)):}
+
+\end{enumerate}
+
+\[\tilde{h}_t = \tanh\left(x_t W_{xh} + (r_t \odot h_{t-1}) W_{hh} + b_h\right)\]
+
+\begin{enumerate}
+
+\item \textbf{Estado Oculto Final (\(h_t\)):}
+
+\end{enumerate}
+
+\[h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t\]
+
+\subsection{5. RNNs Bidireccionales y Apiladas (\emph{Deep RNNs})}
+
+\begin{itemize}
+
+\item \textbf{RNN Bidireccional (BiRNN / BiLSTM):} Procesa la secuencia en ambas direcciones simultáneamente usando dos estados ocultos independientes (\(\overrightarrow{h}_t\) hacia adelante y \(\overleftarrow{h}_t\) hacia atrás). El estado combinado es \(h_t = [\overrightarrow{h}_t \,;\, \overleftarrow{h}_t]\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \emph{Uso:} Crucial en tareas de procesamiento de lenguaje natural (NLP) donde el contexto futuro influye en el significado del presente.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item **RNN Profunda / Apilada (\emph{Stacked RNN}):** Apila múltiples capas recurrentes donde la salida del estado oculto de la capa \(l\) sirve como entrada \(x_t\) para la capa \(l+1\).
+
+\end{itemize}
+
+\subsection{6. Práctica y Aplicación en Código (PyTorch)}
+
+A continuación se incluye una implementación modular completa que ilustra la construcción de una red \textbf{LSTM Bidireccional} para la clasificación de secuencias (ej. análisis de sentimiento o series temporales) en PyTorch:
+
+\begin{lstlisting}[language=Python]
+
+import torch
+
+import torch.nn as nn
+
+import torch.optim as optim
+
+
+
+# --------------------------------------------------------------------------
+
+# 1. Definición del Modelo BiLSTM / GRU en PyTorch
+
+# --------------------------------------------------------------------------
+
+class SequenceClassifier(nn.Module):
+
+    def __init__(self, vocab_size=1000, embed_dim=64, hidden_dim=128, num_classes=2, num_layers=2, dropout=0.3):
+
+        super(SequenceClassifier, self).__init__()
+
+        
+
+        # Capa de Embedding para convertir índices de tokens en vectores continuos
+
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+
+        
+
+        # Capa LSTM Bidireccional de múltiples capas
+
+        self.lstm = nn.LSTM(
+
+            input_size=embed_dim,
+
+            hidden_size=hidden_dim,
+
+            num_layers=num_layers,
+
+            batch_first=True,       # Entrada esperada: (Batch, Seq_Len, Embed_Dim)
+
+            bidirectional=True,     # BiLSTM
+
+            dropout=dropout if num_layers > 1 else 0.0
+
+        )
+
+        
+
+        # Capa lineal final: hidden_dim * 2 por la bidireccionalidad
+
+        self.fc = nn.Linear(hidden_dim * 2, num_classes)
+
+        self.dropout = nn.Dropout(p=dropout)
+
+
+
+    def forward(self, x):
+
+        # x shape: (Batch, Seq_Len)
+
+        embedded = self.embedding(x) # (Batch, Seq_Len, Embed_Dim)
+
+        
+
+        # output shape: (Batch, Seq_Len, Hidden_Dim * 2)
+
+        # h_n, c_n shape: (Num_Layers * 2, Batch, Hidden_Dim)
+
+        lstm_out, (h_n, c_n) = self.lstm(embedded)
+
+        
+
+        # Concatenar el último estado oculto forward y backward de la última capa
+
+        hidden_forward = h_n[-2, :, :]
+
+        hidden_backward = h_n[-1, :, :]
+
+        last_hidden = torch.cat((hidden_forward, hidden_backward), dim=1) # (Batch, Hidden_Dim * 2)
+
+        
+
+        out = self.dropout(last_hidden)
+
+        logits = self.fc(out) # (Batch, Num_Classes)
+
+        return logits
+
+
+
+# --------------------------------------------------------------------------
+
+# 2. Ejemplo de Bucle de Entrenamiento
+
+# --------------------------------------------------------------------------
+
+def train_rnn_demo():
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    
+
+    # Hiperparámetros
+
+    VOCAB_SIZE = 1000
+
+    BATCH_SIZE = 16
+
+    SEQ_LEN = 32
+
+    NUM_CLASSES = 2
+
+    
+
+    # Modelo, pérdida y optimizador
+
+    model = SequenceClassifier(
+
+        vocab_size=VOCAB_SIZE, 
+
+        embed_dim=64, 
+
+        hidden_dim=128, 
+
+        num_classes=NUM_CLASSES, 
+
+        num_layers=2
+
+    ).to(device)
+
+    
+
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    
+
+    # Datos sintéticos de secuencia: (Batch, Seq_Len)
+
+    dummy_input = torch.randint(0, VOCAB_SIZE, (BATCH_SIZE, SEQ_LEN)).to(device)
+
+    dummy_labels = torch.randint(0, NUM_CLASSES, (BATCH_SIZE,)).to(device)
+
+    
+
+    model.train()
+
+    optimizer.zero_grad()
+
+    
+
+    # Forward Pass
+
+    logits = model(dummy_input)
+
+    loss = criterion(logits, dummy_labels)
+
+    
+
+    # Backward Pass
+
+    loss.backward()
+
+    
+
+    # Gradient Clipping esencial para evitar la explosión de gradiente en RNNs
+
+    nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+
+    
+
+    optimizer.step()
+
+    
+
+    print(f"Demostración RNN completada en dispositivo: {device}")
+
+    print(f"Dimensión de salida (Logits): {logits.shape}")
+
+    print(f"Pérdida inicial (Loss): {loss.item():.4f}")
+
+
+
+if __name__ == "__main__":
+
+    train_rnn_demo()
+
+
+
+\end{lstlisting}
+
+Dime si necesitas que profundicemos en algún aspecto de las \textbf{RNNs, LSTMs o GRUs} o si te gustaría preparar un cuestionario interactivo para poner a prueba estos conceptos de cara a tu máster.
+\end{document}
