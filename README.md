@@ -6,7 +6,7 @@ Apuntes y material de repaso sobre **Machine Learning** y **Deep Learning**. El 
 
 ### Fundamentos y modelos clásicos
 
-- [Tema 1 — Foundations of Machine Learning: Classical Models & Clustering](<Apuntes del Tema 1: Foundations of Machine Learning — Classical Models & Clustering.md>)
+- [Tema 1 — Foundations of Machine Learning: Classical Models & Clustering](<Apuntes del Tema 1- Foundations of Machine Learning — Classical Models & Clustering.md>)
 - [Tema 2 — Ensemble Models & Multiclass Decomposition](<Apuntes del Tema 2: Ensemble Models & Multiclass Decomposition>)
 - [Temas 3 y 4 — Modelos Lineales: Regresión Lineal y Regresión Logística](<Apuntes del Tema 3 y Tema 4: Modelos Lineales — Regresión Lineal y Regresión Logística>)
 
