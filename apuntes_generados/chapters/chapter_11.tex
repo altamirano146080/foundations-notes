@@ -1,0 +1,68 @@
+\chapter{Sistemas de recomendación}
+\textit{Este capítulo se construye a partir de las fuentes de diapositivas y notebook indicadas al final.}
+\section{Conexión con las prácticas}
+
+Este tema no tiene una nota Markdown equivalente en el repositorio; se incorpora como capítulo documentado desde sus diapositivas y notebook, manteniendo la trazabilidad de la fuente.
+
+\subsection{Fuente práctica: \texttt{13\_01\_Recommender\_systems.ipynb}}
+
+Ruta: code/13\_01\_Recommender\_systems/13\_01\_Recommender\_systems.ipynb
+
+\textbf{Apartados detectados:} 13\_01 Recommender systems; Exercise 1 — Dataset: MovieLens 100K, Download \& Files; Exercise 2 — Train/Validation/Test Partition (Leave-Last-N per User); Exercise 3 — Content-Based Recommender; Exercise 4 — Ranking Metrics (Precision@K, Recall@K, NDCG@K).
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Salida textual conservada:} \begin{quote}Users: 943, Items: 1682, Genres: 19 | Exercise 1: all checks passed | train (98114, 6) unique users 943 unique items 1678 | valid (943, 6) unique users 943 unique items 534\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+# !pip install torch pandas numpy scikit-learn requests
+
+import copy
+import math
+import random
+import zipfile
+import requests
+import numpy as np
+import pandas as pd
+
+from pathlib import Path
+from typing import Callable, Dict, List, Tuple
+
+from sklearn.preprocessing import normalize
+
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader, RandomSampler
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+NUM_GENRES = 19
+K = 10
+
+\end{lstlisting}
+\section{Autoevaluación razonada}
+
+\subsection*{Pregunta} ¿Qué diferencia hay entre filtrado colaborativo y basado en contenido?
+
+\textbf{Solución.} El colaborativo usa patrones de interacción entre usuarios e ítems; el basado en contenido usa atributos de los ítems y preferencias observadas.
+
+\subsection*{Pregunta} ¿Por qué una métrica de recomendación debe definirse con cuidado?
+
+\textbf{Solución.} Porque precisión, ranking, cobertura y diversidad miden objetivos diferentes y pueden entrar en conflicto.
+\section{Fuentes y trazabilidad}
+
+\textbf{Diapositivas:}
+
+\begin{itemize}
+
+\item \path{slides/13\_Recommender\_systems.pdf}
+
+\end{itemize}

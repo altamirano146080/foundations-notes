@@ -1,0 +1,484 @@
+\chapter{Perceptrones multicapa}
+\section{Apuntes del Tema 5: Multilayer Perceptron (MLP I y II)}
+
+\subsection{1. De Modelos Lineales a No Lineales}
+
+\subsubsection{1.1 Limitaciones de la Transformación Afín}
+
+\begin{itemize}
+
+\item \textbf{Modelos Lineales:} Modelos como la Regresión Lineal o la Regresión Logística calculan transformaciones afines de la forma \(z = x^\top w + b\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{El Problema del Colapso Lineal:} Si se apilan múltiples capas compuestas únicamente por transformaciones afines, la red colapsa matemáticamente en un único modelo lineal equivalente.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \emph{Demostración:} Dadas dos capas lineales \(H = X W^{(1)} + b^{(1)}\) y \(O = H W^{(2)} + b^{(2)}\):
+
+\end{itemize}
+
+\$\$O = (X W\textasciicircum{}\{(1)\} + b\textasciicircum{}\{(1)\}) W\textasciicircum{}\{(2)\} + b\textasciicircum{}\{(2)\} = X (W\textasciicircum{}\{(1)\} W\textasciicircum{}\{(2)\}) + (b\textasciicircum{}\{(1)\} W\textasciicircum{}\{(2)\} + b\textasciicircum{}\{(2)\}) = X W + b\$\$
+
+donde \(W = W^{(1)} W^{(2)}\) y \(b = b^{(1)} W^{(2)} + b^{(2)}\). La capacidad expresiva no aumenta con respecto a un modelo de una sola capa.
+
+\begin{itemize}
+
+\item \textbf{Separabilidad No Lineal (Problema XOR):} Las fronteras de decisión rectilíneas son incapaces de separar clases complejas o disjuntas (como la función lógica XOR o patrones circulares/concéntricos).
+
+\end{itemize}
+
+\subsection{2. Capas Ocultas y Funciones de Activación}
+
+Para dotar al Perceptrón Multicapa (MLP) de la capacidad de aprender relaciones no lineales, se aplica una \textbf{función de activación no lineal} \(\phi(\cdot)\) elemento a elemento tras cada transformación afín en las capas ocultas.
+
+\begin{lstlisting}[language=Python]
+
+Entrada X (n x d) ───► [ Z = X·W(1) + b(1) ] ───► [ H = φ(Z) ] ───► Salida O
+
+
+
+\end{lstlisting}
+
+\subsubsection{2.1 Principales Funciones de Activación}
+
+| Función | Ecuación Matemática \(\phi(z)\) | Rango de Salida | Propiedades y Derivada \(\phi'(z)\) |
+
+| --- | --- | --- | --- |
+
+| \textbf{Sigmoide} | \(\sigma(z) = \frac{1}{1 + e^{-z}}\) | \((0, 1)\) | Interpretación probabilística. \textbf{Problema:} Muestra zonas llanas en los extremos donde la derivada \(\sigma'(z) = \sigma(z)(1 - \sigma(z))\) tiende a 0, provocando desvanecimiento de gradiente (\emph{vanishing gradient}).
+
+ |
+
+| \textbf{Tanh} \emph{(Tangente Hiperbólica)} | \(\tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}\) | \((-1, 1)\) | Centrada en cero (facilita la optimización). Sufre de desvanecimiento de gradientes para \(\vert{}z\vert{}\) elevados (\(\tanh'(z) = 1 - \tanh^2(z)\)).
+
+ |
+
+| \textbf{ReLU} \emph{(Rectified Linear Unit)} | \(\text{ReLU}(z) = \max(0, z)\) | \([0, \infty)\) | \textbf{Estándar en redes profundas:} Computacionalmente eficiente. Derivada \(\phi'(z) = 1\) para \(z > 0\) (evita el desvanecimiento de gradientes en la región positiva). \textbf{Riesgo:} \emph{Dying ReLU} si \(z \le 0\) de forma permanente. |
+
+\subsection{3. Clasificación Multiclase: Regresión Softmax}
+
+Cuando el target \(y\) pertenece a una de las \(K\) categorías posibles (\(K > 2\)) sin un orden explícito, se emplea la codificación \textbf{One-Hot Encoding} (\(y \in \mathbb{R}^K\)).
+
+\subsubsection{3.1 Operador Softmax}
+
+La capa de salida genera \(K\) valores no acotados denominados \textbf{logits} (\(O = [o_1, o_2, \dots, o_K]\)). Para transformar los logits en una distribución de probabilidad bien definida donde \(\sum_{k=1}^{K} \hat{y}_k = 1\) y \(\hat{y}_k > 0\), se aplica la función \textbf{Softmax}:
+
+\$\$\textbackslash\{\}hat\{y\}\_k = \textbackslash\{\}text\{Softmax\}(o\_k) = \textbackslash\{\}frac\{e\textasciicircum{}\{o\_k\}\}\{\textbackslash\{\}sum\_\{j=1\}\textasciicircum{}\{K\} e\textasciicircum{}\{o\_j\}\}\$\$
+
+\begin{itemize}
+
+\item \textbf{Propiedad Conservadora del Orden:} Preserva la ordenación monótona de los logits (\(\arg\max_k \hat{y}_k = \arg\max_k o_k\)).
+
+\end{itemize}
+
+\subsubsection{3.2 Pérdida de Entropía Cruzada Categorical (\emph{Categorical Cross-Entropy})}
+
+Para una muestra con vector One-Hot \(y\) y predicciones \(\hat{y}\):
+
+\$\$\textbackslash\{\}mathcal\{L\}(y, \textbackslash\{\}hat\{y\}) = - \textbackslash\{\}sum\_\{k=1\}\textasciicircum{}\{K\} y\_k \textbackslash\{\}log(\textbackslash\{\}hat\{y\}\_k)\$\$
+
+\begin{quote}\textbf{Nota de Implementación (PyTorch):} En la práctica, no se añade manualmente la capa \texttt{Softmax} al final del modelo. Se retorna el tensor de logits directamente y se utiliza \texttt{nn.CrossEntropyLoss()}, la cual combina internamente \texttt{Softmax} y \texttt{Cross-Entropy} de forma numéricamente estable utilizando el truco \emph{log-sum-exp}.\end{quote}
+
+\begin{quote}\end{quote}
+
+\begin{quote}\end{quote}
+
+\subsection{4. Algoritmo de Propagación: Forward Pass y Backpropagation}
+
+\subsubsection{4.1 Forward Pass (Propagación hacia Adelante)}
+
+Para un MLP de \(L\) capas con entrada \(X \in \mathbb{R}^{n \times d}\) (\(H^{(0)} = X\)):
+
+Para \(i = 1, 2, \dots, L-1\):
+
+\$\$Z\textasciicircum{}\{(i)\} = H\textasciicircum{}\{(i-1)\} W\textasciicircum{}\{(i)\} + b\textasciicircum{}\{(i)\}\$\$
+
+\$\$H\textasciicircum{}\{(i)\} = \textbackslash\{\}phi(Z\textasciicircum{}\{(i)\})\$\$
+
+Salida final (\(L\)):
+
+\$\$O = H\textasciicircum{}\{(L-1)\} W\textasciicircum{}\{(L)\} + b\textasciicircum{}\{(L)\}\$\$
+
+\subsubsection{4.2 Backpropagation (Propagación hacia Atrás)}
+
+Consiste en la aplicación sistemática de la \textbf{Regla de la Cadena} multivariante del cálculo desde la función de pérdida \(\mathcal{J}\) hasta las primeras capas de la red para obtener los gradientes \(\frac{\partial \mathcal{J}}{\partial W^{(i)}}\) y \(\frac{\partial \mathcal{J}}{\partial b^{(i)}}\):
+
+\$\$\textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{J\}\}\{\textbackslash\{\}partial W\textasciicircum{}\{(i)\}\} = (H\textasciicircum{}\{(i-1)\})\textasciicircum{}\textbackslash\{\}top \textbackslash\{\}cdot \textbackslash\{\}delta\textasciicircum{}\{(i)\}, \textbackslash\{\}quad \textbackslash\{\}text\{donde \} \textbackslash\{\}delta\textasciicircum{}\{(i)\} = \textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{J\}\}\{\textbackslash\{\}partial Z\textasciicircum{}\{(i)\}\}\$\$
+
+\begin{itemize}
+
+\item \textbf{Gestión de Memoria:} Los tensores intermedios calculados durante el \emph{forward pass} (\(H^{(i)}, Z^{(i)}\)) deben almacenarse en memoria para ser reevaluados durante el \emph{backpropagation}, por lo que entrenar una red neuronal consume considerablemente más memoria que ejecutar inferencia (\texttt{with torch.no\_grad():}).
+
+\end{itemize}
+
+\subsection{5. Propiedades Teóricas e Inicialización de Parámetros}
+
+\subsubsection{5.1 Teorema de Aproximación Universal}
+
+\begin{itemize}
+
+\item \textbf{Definición:} Un Perceptrón Multicapa con tan solo \textbf{una capa oculta} y un número suficiente de neuronas no lineales puede aproximar cualquier función continua en un dominio compacto con un grado de precisión arbitrario \(\epsilon > 0\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{¿Por qué usar redes profundas (más de 1 capa)?} El teorema demuestra la \emph{existencia} teórica de dicha red, pero no especifica la cantidad de neuronas requeridas (que puede ser masiva/exponencial) ni si sus pesos se pueden aprender eficazmente con descenso de gradiente. Añadir profundidad permite representar funciones complejas mediante composiciones jerárquicas con un \textbf{número drásticamente menor de parámetros}.
+
+\end{itemize}
+
+\subsubsection{5.2 Rompimiento de la Simetría e Inicialización}
+
+\begin{itemize}
+
+\item \textbf{Inconveniente de Inicialización en Cero:} Si todos los pesos de una capa oculta se inicializan con la misma constante (p. ej. \(w_{ij} = 0\)), todas las neuronas de esa capa calcularán el mismo valor en el \emph{forward pass} y recibirán exactamente el mismo gradiente en el \emph{backward pass}. El MLP colapsaría al comportamiento de un modelo lineal único.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Estrategias de Inicialización:}
+
+\item \textbf{Xavier / Glorot Initialization:} Diseñada para activaciones sigmoideas o \(\tanh\). Mantiene constante la varianza de las activaciones y gradientes a través de las capas:
+
+\end{itemize}
+
+\$\$W \textbackslash\{\}sim \textbackslash\{\}mathcal\{N\}\textbackslash\{\}left(0, \textbackslash\{\}, \textbackslash\{\}frac\{2\}\{n\_\{\textbackslash\{\}text\{in\}\} + n\_\{\textbackslash\{\}text\{out\}\}\}\textbackslash\{\}right)\$\$
+
+\begin{itemize}
+
+\item \textbf{He / Kaiming Initialization:} Diseñada para activaciones \textbf{ReLU}, compensando que la mitad de las neuronas se desactivan (\(\le 0\)):
+
+\end{itemize}
+
+\$\$W \textbackslash\{\}sim \textbackslash\{\}mathcal\{N\}\textbackslash\{\}left(0, \textbackslash\{\}, \textbackslash\{\}frac\{2\}\{n\_\{\textbackslash\{\}text\{in\}\}\}\textbackslash\{\}right)\$\$
+
+\subsection{6. Problemas en Redes Profundas: Desvanecimiento y Explosión del Gradiente}
+
+Al encadenar múltiples capas mediante la regla de la cadena, la magnitud del gradiente acumulado en las capas iniciales se calcula como un producto iterativo de matrices de pesos y derivadas de activación:
+
+\$\$\textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{J\}\}\{\textbackslash\{\}partial W\textasciicircum{}\{(1)\}\} \textbackslash\{\}propto \textbackslash\{\}prod\_\{l=2\}\textasciicircum{}\{L\} W\textasciicircum{}\{(l)\} \textbackslash\{\}cdot \textbackslash\{\}phi'(Z\textasciicircum{}\{(l)\})\$\$
+
+\begin{itemize}
+
+\item \textbf{Vanishing Gradients (Desvanecimiento):} Si las derivadas o los valores propios de los pesos son menores a \(1\) (p. ej., con sigmoide/tanh en zonas de saturación), el producto decrece exponencialmente hacia \(0\) conforme la red es más profunda. Las capas iniciales dejan de actualizarse y no aprenden.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Exploding Gradients (Explosión):} Si los valores de los pesos son mayores a \(1\), el producto crece exponencialmente provocando actualizaciones numéricamente inestables (\texttt{NaN} o \texttt{Inf}). Se mitiga aplicando \textbf{Gradient Clipping} (\texttt{nn.utils.clip\_grad\_norm\_}).
+
+\end{itemize}
+
+\subsection{7. Práctica y Aplicación en Código (PyTorch)}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+
+import torch.nn as nn
+
+import torch.optim as optim
+
+
+
+# --------------------------------------------------------------------------
+
+# 1. Definición del Modelo MLP Multiclase
+
+# --------------------------------------------------------------------------
+
+class DeepMLP(nn.Module):
+
+    def __init__(self, input_dim=8, hidden_dims=[12, 6], num_classes=3, dropout_rate=0.2):
+
+        super(DeepMLP, self).__init__()
+
+        
+
+        layers = []
+
+        in_dim = input_dim
+
+        
+
+        # Construcción de las capas ocultas con ReLU y Dropout
+
+        for h_dim in hidden_dims:
+
+            linear_layer = nn.Linear(in_dim, h_dim)
+
+            # Inicialización He / Kaiming recomendada para ReLU
+
+            nn.init.kaiming_normal_(linear_layer.weight, nonlinearity='relu')
+
+            nn.init.zeros_(linear_layer.bias)
+
+            
+
+            layers.append(linear_layer)
+
+            layers.append(nn.ReLU())
+
+            layers.append(nn.Dropout(p=dropout_rate))
+
+            in_dim = h_dim
+
+            
+
+        # Capa de salida lineal (entrega logits directos)
+
+        out_layer = nn.Linear(in_dim, num_classes)
+
+        nn.init.xavier_normal_(out_layer.weight)
+
+        nn.init.zeros_(out_layer.bias)
+
+        layers.append(out_layer)
+
+        
+
+        self.network = nn.Sequential(*layers)
+
+
+
+    def forward(self, x):
+
+        return self.network(x)
+
+
+
+# --------------------------------------------------------------------------
+
+# 2. Bucle de Entrenamiento
+
+# --------------------------------------------------------------------------
+
+def train_mlp_multiclass():
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    
+
+    # Datos sintéticos: 100 muestras, 8 características, 3 clases
+
+    X_dummy = torch.randn(100, 8)
+
+    y_dummy = torch.randint(0, 3, (100,)) # Clases: 0, 1, 2
+
+    
+
+    model = DeepMLP(input_dim=8, hidden_dims=[12, 6], num_classes=3).to(device)
+
+    
+
+    # CrossEntropyLoss combina LogSoftmax + NLLLoss
+
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = optim.Adam(model.parameters(), lr=0.005)
+
+    
+
+    X_b = X_dummy.to(device)
+
+    y_b = y_dummy.to(device)
+
+    
+
+    model.train()
+
+    for epoch in range(1, 101):
+
+        optimizer.zero_grad()
+
+        
+
+        # 1. Forward Pass (Logits)
+
+        logits = model(X_b)
+
+        loss = criterion(logits, y_b)
+
+        
+
+        # 2. Backward Pass
+
+        loss.backward()
+
+        
+
+        # 3. Gradient Clipping opcional para evitar explosión
+
+        nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+        
+
+        # 4. Actualización de parámetros
+
+        optimizer.step()
+
+        
+
+        if epoch % 25 == 0:
+
+            print(f"Época [{epoch:3d}/100] | Loss: {loss.item():.4f}")
+
+
+
+if __name__ == "__main__":
+
+    train_mlp_multiclass()
+
+
+
+\end{lstlisting}
+\section{Conexión con las prácticas}
+
+Las prácticas muestran el paso de regresión logística multiclase a MLP y relacionan nn.Linear, nn.Sequential y autograd con el forward/backward pass.
+
+\subsection{Fuente práctica: \texttt{05\_MLP\_1.ipynb}}
+
+Ruta: code/05\_01\_MLP/05\_MLP\_1.ipynb
+
+\textbf{Apartados detectados:} Multi Logistic Regression.
+
+Salidas gráficas almacenadas: 6.
+
+\textbf{Salida textual conservada:} \begin{quote}<Figure size 800x600 with 2 Axes> | Epoch [100/1000], Loss: 0.6977 | Epoch [200/1000], Loss: 0.6939 | Epoch [300/1000], Loss: 0.6931\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.datasets import make_circles
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import numpy as np
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{05\_02\_MLP.ipynb}}
+
+Ruta: code/05\_02\_MLP/05\_02\_MLP.ipynb
+
+\textbf{Apartados detectados:} From 2 to many classes; Short Assignment.
+
+Salidas gráficas almacenadas: 5.
+
+\textbf{Salida textual conservada:} \begin{quote}<torch.\_C.Generator at 0x774f2419fb10> | <Figure size 800x600 with 2 Axes> | Epoch [100/10000], Loss: 0.6439 | Epoch [200/10000], Loss: 0.6196\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.datasets import make_circles, make_moons, make_blobs
+from sklearn.model_selection import train_test_split
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{05\_04\_MLP.ipynb}}
+
+Ruta: code/05\_04\_MLP/05\_04\_MLP.ipynb
+
+\textbf{Apartados detectados:} A more compact way to write our code; nn.Linear; nn.Sequential; Assignment.
+
+Salidas gráficas almacenadas: 6.
+
+\textbf{Salida textual conservada:} \begin{quote}<Figure size 640x480 with 1 Axes> | Tipo de X\_train: <class 'torch.Tensor'> torch.float32 | Tipo de y\_train: <class 'torch.Tensor'> torch.float32 | Epoch [100/1200], Loss: 0.7300\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+class HiddenLayer(nn.Module):
+  def __init__(self, input_size, hidden_size):
+    super(HiddenLayer, self).__init__()
+    self.W = nn.Parameter(torch.randn(input_size, hidden_size))
+    self.b = nn.Parameter(torch.zeros(1, hidden_size))
+
+  def forward(self, X):
+    return torch.matmul(X, self.W) + self.b
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{02\_01\_BasicPytorch.ipynb}}
+
+Ruta: code/Practice\_02/02\_01\_BasicPytorch.ipynb
+
+\textbf{Apartados detectados:} Mathematical Foundations. Simple Use of PyTorch; Tensors; Indexing and Slicing; Operations and Basic Properties of Tensor Arithmetic; Broadcasting.
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+x = torch.tensor([1.0, 2, 4, 8])
+y = torch.tensor([2, 2, 2, 2])
+x + y, x - y, x * y, x / y, x ** y
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{02\_02\_Autograd.ipynb}}
+
+Ruta: code/Practice\_02/02\_02\_Autograd.ipynb
+
+\textbf{Apartados detectados:} Mathematical Foundations. Automatic differentiation with PyTorch; Mathematical Foundations. Automatic differentiation with TensorFlow; Summary: Key Differences Between PyTorch and TensorFlow for autograd.
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+a = torch.tensor(3.0, requires_grad=True)
+b = torch.tensor(4.0, requires_grad=True)
+c = torch.tensor(5.0, requires_grad=True)
+
+print(f"Initial state:")
+print(f"a = {a}, a.grad = {a.grad}")
+print(f"b = {b}, b.grad = {b.grad}")
+print(f"c = {c}, c.grad = {c.grad}\n")
+
+\end{lstlisting}
+\section{Autoevaluación razonada}
+
+\subsection*{Pregunta} ¿Qué representa un logit en clasificación multiclase?
+
+\textbf{Solución.} La puntuación sin normalizar de una clase antes de aplicar la transformación usada por la pérdida o la probabilidad.
+
+\subsection*{Pregunta} ¿Qué calcula autograd?
+
+\textbf{Solución.} Construye y recorre el grafo de operaciones para obtener derivadas respecto de los tensores que requieren gradiente.
+\section{Fuentes y trazabilidad}
+
+\textbf{Diapositivas:}
+
+\begin{itemize}
+
+\item \path{slides/05\_01\_MLP.pdf}
+
+\item \path{slides/05\_03\_MLP.pdf}
+
+\item \path{slides/05\_NotesPytorch1.pdf}
+
+\end{itemize}
+
+\textbf{Nota personal:} apuntes/Apuntes del Tema 5 - Multilayer Perceptron (MLP I y II).md

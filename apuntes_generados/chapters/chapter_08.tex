@@ -1,0 +1,536 @@
+\chapter{Redes neuronales convolucionales}
+\section{Apuntes del Tema 9: Redes Neuronales Convolucionales (CNN I y II)}
+
+\subsection{1. De MLPs a Convoluciones: Motivación e Sesgos Inductivos}
+
+\subsubsection{1.1 Limitaciones del Perceptrón Multicapa (MLP) en Imágenes}
+
+\begin{itemize}
+
+\item \textbf{Explosión de Parámetros:} Un MLP requiere aplanar la imagen de dimensión \(C \times H \times W\) a un vector unidimensional \(x \in \mathbb{R}^{C \cdot H \cdot W}\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \emph{Ejemplo:} Para una imagen pequeña de \(64 \times 64 \times 3 = 12\,288\) entradas, una primera capa oculta con \(1\,024\) neuronas requiere \((12\,288 \times 1\,024) + 1\,024 \approx 12.58 \text{ millones de parámetros}\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Pérdida de Estructura Espacial:} Al aplanar la matriz de píxeles, el MLP trata la distancia entre píxeles adyacentes de la misma manera que la distancia entre píxeles situados en esquinas opuestas de la imagen.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Sensibilidad al Desplazamiento:} Un MLP no reconoce un objeto si se traslada unos pocos píxeles en la imagen, ya que la entrada vectorizada cambia por completo.
+
+\end{itemize}
+
+\subsubsection{1.2 Principios de Invariancia Espacial}
+
+Para procesar señales estructuradas en 2D de forma eficiente, las Redes Neuronales Convolucionales (CNN) incorporan dos sesgos inductivos clave:
+
+\begin{enumerate}
+
+\item **Localidad (\emph{Local Receptive Fields}):** Las características visuales significativas (bordes, esquinas, texturas) se forman por la interacción de píxeles contiguos en regiones espaciales reducidas.
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item **Invariancia a la Traslación / Compartición de Pesos (\emph{Weight Sharing}):** La representación o patrón de un objeto no debe cambiar independientemente de la posición que ocupe dentro de la imagen. Un detector de bordes es útil tanto en la esquina superior izquierda como en el centro.
+
+\end{enumerate}
+
+\subsection{2. Operaciones Convolucionales y sus Parámetros}
+
+\subsubsection{2.1 La Operación de Convolución 2D}
+
+Un filtro o núcleo (\emph{kernel}) \(K \in \mathbb{R}^{k_h \times k_w}\) se desliza sobre la matriz de entrada \(X \in \mathbb{R}^{H \times W}\), calculando el producto escalar elemento a elemento seguido de una suma:
+
+\$\$Y\_\{i, j\} = (X * K)\_\{i, j\} = \textbackslash\{\}sum\_\{m\} \textbackslash\{\}sum\_\{n\} X\_\{i+m, j+n\} \textbackslash\{\}cdot K\_\{m, n\}\$\$
+
+\begin{lstlisting}[language=Python]
+
+Entrada X (5x5)            Kernel K (3x3)           Feature Map Y (3x3)
+
+[ 1  1  1  0  0 ]         [ 1  0  1 ]
+
+[ 0  1  1  1  0 ]    *    [ 0  1  0 ]     --->      [ 4  3  4 ]
+
+[ 0  0  1  1  1 ]         [ 1  0  1 ]               [ .  .  . ]
+
+[ 0  0  1  1  0 ]                                   [ .  .  . ]
+
+[ 0  1  1  0  0 ]
+
+
+
+\end{lstlisting}
+
+\subsubsection{2.2 Hiperparámetros Fundamentales: Padding, Stride y Canales}
+
+\begin{itemize}
+
+\item **Relleno (\emph{Padding}, \(p\)):** Añade filas y columnas de ceros alrededor del borde de la entrada para controlar la dimensión espacial de salida y evitar la pérdida acelerada de información en los bordes.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item **Paso (\emph{Stride}, \(s\)):** Especifica el número de píxeles que se desplaza el filtro en cada paso horizontal y vertical. Un \(s > 1\) subsamplea la entrada reduciendo su dimensión espacial.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Múltiples Canales de Entrada y Salida (\(C_{\text{in}}, C_{\text{out}}\)):}
+
+\item Si la entrada tiene \(C_{\text{in}}\) canales (ej. \(RGB = 3\)), el filtro posee dimensiones \(C_{\text{in}} \times k_h \times k_w\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item Para extraer \(C_{\text{out}}\) mapas de características distintos, se aplican \(C_{\text{out}}\) filtros independientes de este tipo.
+
+\end{itemize}
+
+\subsubsection{2.3 Ecuación de Dimensión de Salida}
+
+Dada una entrada de dimensión \(C_{\text{in}} \times H \times W\), un kernel de tamaño \(k_h \times k_w\), padding \(p\) y stride \(s\), la dimensión del mapa de características resultante \(C_{\text{out}} \times H_{\text{out}} \times W_{\text{out}}\) se calcula mediante:
+
+\$\$H\_\{\textbackslash\{\}text\{out\}\} = \textbackslash\{\}left\textbackslash\{\}lfloor \textbackslash\{\}frac\{H + 2p - k\_h\}\{s\} \textbackslash\{\}right\textbackslash\{\}rfloor + 1\$\$
+
+\$\$W\_\{\textbackslash\{\}text\{out\}\} = \textbackslash\{\}left\textbackslash\{\}lfloor \textbackslash\{\}frac\{W + 2p - k\_w\}\{s\} \textbackslash\{\}right\textbackslash\{\}rfloor + 1\$\$
+
+\subsection{3. Capas de Agregación (\emph{Pooling})}
+
+Las capas de pooling introducen \textbf{invariancia local a pequeñas traslaciones y rotaciones}, reduciendo la dimensión espacial de las representaciones y disminuyendo la carga computacional.
+
+\subsubsection{3.1 Tipos Principales de Pooling}
+
+\begin{enumerate}
+
+\item \textbf{Max Pooling (`nn.MaxPool2d`):} Extrae el valor máximo dentro de la ventana de selección. Resalta las características más prominentes o activaciones más fuertes.
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Average Pooling (`nn.AvgPool2d`):} Calcula el promedio de todos los valores de la ventana. Proporciona una representación más suave de la región.
+
+\end{enumerate}
+
+\begin{quote}\textbf{Propiedad importante:} Las capas de pooling operan de forma independiente sobre cada canal y \textbf{no poseen parámetros entrenables} (\(W, b\)).\end{quote}
+
+\begin{quote}\end{quote}
+
+\begin{quote}\end{quote}
+
+\subsection{4. Jerarquía de Representaciones y Arquitecturas Clásicas}
+
+\subsubsection{4.1 Extracción Jerárquica de Características}
+
+A medida que la señal avanza a través de capas convolucionales profundas y subsampling:
+
+\begin{itemize}
+
+\item \textbf{Capas Iniciales:} Filtran patrones simples y locales de bajo nivel (bordes, gradientes de color, orientaciones).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Capas Intermedias:} Combinan los bordes para detectar texturas, esquinas y partes de objetos.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Capas Profundas:} Ensamblan las partes para representar objetos completos y estructuras semánticas complejas.
+
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+
+Imagen Raw ──► Bordes/Líneas ──► Texturas/Partes ──► Objetos Complejos ──► Clases (Logits)
+
+ (Entrada)      (Capa Conv 1)     (Capa Conv 2)       (Capa Conv 3)     (Capas Densas)
+
+
+
+\end{lstlisting}
+
+\subsubsection{4.2 Arquitectura Clásica: LeNet-5 (Yann LeCun, 1998)}
+
+Fue una de las primeras redes convolucionales con éxito comercial para la clasificación de dígitos manuscritos (MNIST).
+
+\begin{itemize}
+
+\item \textbf{Estructura Típica:}
+
+\end{itemize}
+
+\begin{enumerate}
+
+\item \textbf{Entrada:} Imagen en escala de grises (\(1 \times 28 \times 28\) o \(1 \times 32 \times 32\)).
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Bloque 1:} \texttt{Conv2d} (\(1 \rightarrow 6\) canales, \(5\times5\)) + \texttt{Tanh} + \texttt{AvgPool2d} (\(2\times2\), \(s=2\)).
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Bloque 2:} \texttt{Conv2d} (\(6 \rightarrow 16\) canales, \(5\times5\)) + \texttt{Tanh} + \texttt{AvgPool2d} (\(2\times2\), \(s=2\)).
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Clasificador denso:} Aplanado (\texttt{Flatten}) + \texttt{Linear} (120) + \texttt{Tanh} + \texttt{Linear} (84) + \texttt{Tanh} + \texttt{Linear} (10 clases).
+
+\end{enumerate}
+
+\subsection{5. Gestión de Datos en PyTorch: \texttt{Dataset} y \texttt{DataLoader}}
+
+Para alimentar eficientemente datos e imágenes a modelos de Deep Learning, PyTorch estandariza la carga mediante dos clases fundamentales:
+
+\begin{enumerate}
+
+\item \textbf{`torch.utils.data.Dataset`:} Almacena las muestras y sus etiquetas correspondientes. Debe implementar tres métodos:
+
+\end{enumerate}
+
+\begin{itemize}
+
+\item \texttt{\_\_init\_\_}: Inicializa rutas, transformaciones y metadatos.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \texttt{\_\_len\_\_}: Devuelve el número total de muestras en el conjunto de datos.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \texttt{\_\_getitem\_\_(self, idx)}: Carga y retorna una muestra \((X, y)\) dado un índice \(idx\).
+
+\end{itemize}
+
+\begin{enumerate}
+
+\item \textbf{`torch.utils.data.DataLoader`:} Envoltorio que abstrae el procesamiento iterativo en minilotes (\emph{mini-batches}), barajado de datos (\emph{shuffling}), carga paralela multiproceso (\emph{multiprocessing}) y gestión de memoria.
+
+\end{enumerate}
+
+\subsection{6. Práctica y Aplicación en Código (PyTorch y Torchvision)}
+
+A continuación se incluye una implementación modular completa que incluye la definición de un \texttt{Dataset} personalizado, la canalización de transformaciones, la arquitectura CNN tipo LeNet-5 y el bucle de entrenamiento:
+
+\begin{lstlisting}[language=Python]
+
+import torch
+
+import torch.nn as nn
+
+import torch.optim as optim
+
+from torch.utils.data import Dataset, DataLoader
+
+import torchvision.transforms as transforms
+
+from PIL import Image
+
+import os
+
+
+
+# --------------------------------------------------------------------------
+
+# 1. Pipeline de Transformaciones y Preprocesamiento
+
+# --------------------------------------------------------------------------
+
+IMAGE_SIZE = 32
+
+
+
+transform_train = transforms.Compose([
+
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+
+    transforms.RandomHorizontalFlip(p=0.5),
+
+    transforms.ToTensor(),
+
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+])
+
+
+
+transform_val_test = transforms.Compose([
+
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+
+    transforms.ToTensor(),
+
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+])
+
+
+
+# --------------------------------------------------------------------------
+
+# 2. Definición de la Arquitectura CNN (Inspirada en LeNet-5)
+
+# --------------------------------------------------------------------------
+
+class LeNet5Classifier(nn.Module):
+
+    def __init__(self, num_classes=10):
+
+        super(LeNet5Classifier, self).__init__()
+
+        
+
+        # Bloque de Extracción de Características (Convolución + Pooling)
+
+        self.feature_extractor = nn.Sequential(
+
+            # Conv1: (B, 3, 32, 32) -> (B, 6, 28, 28)
+
+            nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5, stride=1, padding=0),
+
+            nn.Tanh(),
+
+            # Pool1: (B, 6, 28, 28) -> (B, 6, 14, 14)
+
+            nn.AvgPool2d(kernel_size=2, stride=2),
+
+            
+
+            # Conv2: (B, 6, 14, 14) -> (B, 16, 10, 10)
+
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1, padding=0),
+
+            nn.Tanh(),
+
+            # Pool2: (B, 16, 10, 10) -> (B, 16, 5, 5)
+
+            nn.AvgPool2d(kernel_size=2, stride=2)
+
+        )
+
+        
+
+        # Bloque Clasificador Denso
+
+        self.classifier = nn.Sequential(
+
+            nn.Flatten(), # (B, 16 * 5 * 5) = (B, 400)
+
+            nn.Linear(16 * 5 * 5, 120),
+
+            nn.Tanh(),
+
+            nn.Dropout(p=0.3),
+
+            nn.Linear(120, 84),
+
+            nn.Tanh(),
+
+            nn.Linear(84, num_classes) # Logits de salida
+
+        )
+
+
+
+    def forward(self, x):
+
+        x = self.feature_extractor(x)
+
+        logits = self.classifier(x)
+
+        return logits
+
+
+
+# --------------------------------------------------------------------------
+
+# 3. Bucle de Entrenamiento
+
+# --------------------------------------------------------------------------
+
+def train_cnn_demo():
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    
+
+    # Modelo, Pérdida y Optimizador
+
+    model = LeNet5Classifier(num_classes=10).to(device)
+
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+
+    
+
+    # Tensor sintético de prueba: 16 imágenes RGB de 32x32
+
+    dummy_images = torch.randn(16, 3, 32, 32).to(device)
+
+    dummy_labels = torch.randint(0, 10, (16,)).to(device)
+
+    
+
+    model.train()
+
+    optimizer.zero_grad()
+
+    
+
+    # Forward Pass
+
+    logits = model(dummy_images)
+
+    loss = criterion(logits, dummy_labels)
+
+    
+
+    # Backward Pass
+
+    loss.backward()
+
+    optimizer.step()
+
+    
+
+    print(f"Demostración exitosa en {device}.")
+
+    print(f"Dimensión de Salida (Logits): {logits.shape}")
+
+    print(f"Pérdida Inicial (Loss): {loss.item():.4f}")
+
+
+
+if __name__ == "__main__":
+
+    train_cnn_demo()
+
+
+
+\end{lstlisting}
+
+Dime si así te permite copiar todo el contenido sin problemas y si te gustaría que aclaremos algún concepto o que preparemos un cuestionario interactivo de este tema para preparar tu evaluación.
+\section{Conexión con las prácticas}
+
+Las prácticas implementan convolución desde cero, kernels aprendidos, nn.Conv2d, pooling, LeNet y clasificación de imágenes; las figuras guardadas muestran las representaciones y métricas producidas.
+
+\subsection{Fuente práctica: \texttt{09\_02\_CNN.ipynb}}
+
+Ruta: code/09\_02\_CNN/09\_02\_CNN.ipynb
+
+\textbf{Apartados detectados:} Short Assignment.
+
+Salidas gráficas almacenadas: 5.
+
+\textbf{Salida textual conservada:} \begin{quote}(500, 'cat.106.jpg') | (500, 'dog.10002.jpg') | (224, 300, 3) | (307, 410, 3)\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+from matplotlib import pyplot as plt
+import os #for managing files, folders, etc.
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{09\_04\_CNN.ipynb}}
+
+Ruta: code/09\_02\_CNN/09\_04\_CNN.ipynb
+
+\textbf{Apartados detectados:} Image convolution from scratch; Learning kernels; nn.Conv2d; Pooling layers; MNIST Fashion with feature extraction.
+
+Salidas gráficas almacenadas: 7.
+
+\textbf{Salida textual conservada:} \begin{quote}<matplotlib.image.AxesImage at 0x7ebcbd8274d0> | <Figure size 640x480 with 1 Axes> | (396, 312, 3) | torch.Size([454, 370])\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as f
+from matplotlib import pyplot as plt
+from torchvision import transforms
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{09\_06\_CNN.ipynb}}
+
+Ruta: code/09\_02\_CNN/09\_06\_CNN.ipynb
+
+\textbf{Apartados detectados:} Stacking two convolutional layers; Classical LeNet; Modern LeNet; Dogs vs. Cats Classification with a Custom CNN.
+
+Salidas gráficas almacenadas: 1.
+
+\textbf{Salida textual conservada:} \begin{quote}Epoch [1/5] | Train Loss: 0.5030 | Train Acc: 81.61\% | Test Acc: 86.03\% | Epoch [2/5] | Train Loss: 0.3258 | Train Acc: 88.17\% | Test Acc: 88.36\% | Epoch [3/5] | Train Loss: 0.2807 | Train Acc: 89.67\% | Test Acc: 89.13\% | Epoch [4/5] | Train Loss: 0.2526 | Train Acc: 90.75\% | Test Acc: 89.76\%\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as f
+from matplotlib import pyplot as plt
+import torchvision
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+
+\end{lstlisting}
+\section{Autoevaluación razonada}
+
+\subsection*{Pregunta} ¿Qué controlan padding y stride?
+
+\textbf{Solución.} Padding controla el borde y el tamaño espacial disponible; stride controla cuánto se desplaza el kernel y, por tanto, la reducción espacial.
+
+\subsection*{Pregunta} ¿Por qué se comparten pesos en una CNN?
+
+\textbf{Solución.} Para detectar el mismo patrón en distintas posiciones con muchos menos parámetros que una capa totalmente conectada.
+\section{Fuentes y trazabilidad}
+
+\textbf{Diapositivas:}
+
+\begin{itemize}
+
+\item \path{slides/09\_01\_CNN.pdf}
+
+\item \path{slides/09\_03\_CNN.pdf}
+
+\item \path{slides/09\_05\_CNN.pdf}
+
+\end{itemize}
+
+\textbf{Nota personal:} apuntes/Apuntes del Tema 9 - Redes Neuronales Convolucionales (CNN I y II).md

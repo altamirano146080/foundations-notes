@@ -1,0 +1,775 @@
+\chapter{Atención y Transformers}
+\section{Apuntes del Tema 11: Attention Mechanisms and Transformers}
+
+\subsection{1. Introducción y Limitaciones de los Modelos Secuenciales (Seq2Seq)}
+
+\subsubsection{1.1 El Enfoque Seq2Seq Tradicional (RNNs)}
+
+\begin{itemize}
+
+\item \textbf{Modelado Secuencial:} Las redes neuronales recurrentes (RNNs) procesan las secuencias token a token de forma secuencial.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Arquitectura Encoder-Decoder:} En tareas como la traducción automática (p. ej., de inglés a español), el \emph{Encoder} procesa la frase de entrada y condensa su información en un vector de estado oculto final \(h_{T_x}\). Luego, el \emph{Decoder} genera la secuencia traducida token a token condicionado en este vector.
+
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+
+Entrada (Inglés) ──► [ ENCODER (RNN) ] ──► Vector de Estado H_Tx ──► [ DECODER (RNN) ] ──► Salida (Español)
+
+
+
+\end{lstlisting}
+
+\subsubsection{1.2 El Cuello de Botella del Vector de Contexto (\emph{Context Bottleneck})}
+
+\begin{itemize}
+
+\item \textbf{Limitación Principal:} Comprimir toda una frase de longitud variable en un único vector de tamaño fijo \(h_{T_x}\) genera una gran pérdida de información.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Fallo en Secuencias Largas:} Aunque funciona bien para frases cortas (p. ej., \emph{"The black cat"} \(\rightarrow\) \emph{"El gato negro"}), el modelo falla en oraciones largas y complejas.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Dependencias a Largo Plazo:} Las palabras iniciales se "olvidan" a medida que la secuencia crece. Además, no gestiona eficientemente el reordenamiento de palabras entre idiomas.
+
+\end{itemize}
+
+\subsection{2. Mecanismos de Atención en RNNs (Bahdanau et al., 2014)}
+
+\subsubsection{2.1 Filosofía de la Atención}
+
+En lugar de depender de un único vector fijo, la atención permite al \emph{Decoder} acceder a \textbf{todos} los estados ocultos del \emph{Encoder} \(\{h_1, h_2, \dots, h_{T_x}\}\) en cada paso de decodificación.
+
+\begin{itemize}
+
+\item \textbf{Adaptabilidad:} En cada paso \(t\), el \emph{Decoder} calcula qué partes de la frase de entrada son más relevantes para predecir el siguiente token.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Vector de Contexto Dinámico (\(c_t\)):} Se calcula como una suma ponderada de todos los estados del \emph{Encoder}:
+
+\end{itemize}
+
+\$\$c\_t = \textbackslash\{\}sum\_\{i=1\}\textasciicircum{}\{T\_x\} \textbackslash\{\}alpha\_\{t,i\} h\_i\$\$
+
+\subsubsection{2.2 Formulación Matemática de la Atención de Bahdanau}
+
+Para cada paso de tiempo del decodificador \(i\) con estado anterior \(s_{i-1}\):
+
+\begin{enumerate}
+
+\item **Puntuación de Alineamiento (\emph{Score}):**
+
+\end{enumerate}
+
+\$\$e\_\{ij\} = a(s\_\{i-1\}, h\_j)\$\$
+
+\emph{(donde \(a\) es una red feedforward)}.
+
+\begin{enumerate}
+
+\item \textbf{Pesos de Atención (Softmax):}
+
+\end{enumerate}
+
+\$\$\textbackslash\{\}alpha\_\{ij\} = \textbackslash\{\}frac\{\textbackslash\{\}exp(e\_\{ij\})\}\{\textbackslash\{\}sum\_\{k=1\}\textasciicircum{}\{T\_x\} \textbackslash\{\}exp(e\_\{ik\})\}\$\$
+
+\begin{enumerate}
+
+\item \textbf{Vector de Contexto:}
+
+\end{enumerate}
+
+\$\$c\_i = \textbackslash\{\}sum\_\{j=1\}\textasciicircum{}\{T\_x\} \textbackslash\{\}alpha\_\{ij\} h\_j\$\$
+
+\begin{enumerate}
+
+\item \textbf{Actualización del Estado y Predicción:}
+
+\end{enumerate}
+
+\$\$s\_i = f(s\_\{i-1\}, y\_\{i-1\}, c\_i)\$\$
+
+\$\$P(y\_i \textbackslash\{\}mid y\_\{1:i-1\}, x) = g(y\_\{i-1\}, s\_i, c\_i)\$\$
+
+\subsubsection{2.3 Inconvenientes de la Atención sobre RNNs}
+
+\begin{itemize}
+
+\item \textbf{Dependencia Recurrente:} La computación sigue siendo secuencial (paso a paso), lo que impide la paralelizabilidad masiva en GPUs durante el entrenamiento.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Poco Directo:} La atención solo conecta el \emph{Decoder} con el \emph{Encoder}, pero la información dentro de cada bloque sigue fluyendo de forma secuencial implícita.
+
+\end{itemize}
+
+\subsection{3. Autoatención (\emph{Self-Attention}) en Transformers}
+
+Propuesto por Vaswani et al. (2017) en \emph{"Attention is All You Need"}, elimina por completo la recurrencia. Cada palabra puede atender directamente a cualquier otra palabra de la secuencia sin importar la distancia.
+
+\subsubsection{3.1 Queries, Keys y Values (\(Q, K, V\))}
+
+Para cada token con embedding \(x \in \mathbb{R}^d\), se calculan tres proyecciones mediante matrices de pesos entrenables:
+
+\begin{enumerate}
+
+\item \textbf{Query (\(q = W_Q x \in \mathbb{R}^{d_k}\)):} Lo que el token busca saber sobre otros.
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Key (\(k = W_K x \in \mathbb{R}^{d_k}\)):} Cómo se identifica o etiqueta el token ante los demás.
+
+\end{enumerate}
+
+\begin{enumerate}
+
+\item \textbf{Value (\(v = W_V x \in \mathbb{R}^{d_v}\)):} La información que el token lleva para compartir.
+
+\end{enumerate}
+
+\subsubsection{3.2 Formulación Matricial: Scaled Dot-Product Attention}
+
+Dada la matriz de entrada \(X \in \mathbb{R}^{T_x \times d_{\text{model}}}\), se proyectan las matrices \(Q = X W_Q\), \(K = X W_K\) y \(V = X W_V\).
+
+\$\$\textbackslash\{\}text\{Attention\}(Q, K, V) = \textbackslash\{\}text\{Softmax\}\textbackslash\{\}left( \textbackslash\{\}frac\{Q K\textasciicircum{}\textbackslash\{\}top\}\{\textbackslash\{\}sqrt\{d\_k\}\} \textbackslash\{\}right) V\$\$
+
+\begin{itemize}
+
+\item \textbf{Matriz de Similitud (\(S = \frac{Q K^\top}{\sqrt{d_k}}\)):} Mide la afinidad entre las consultas y las claves.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Factor de Escala (\(\sqrt{d_k}\)):} Previene que el producto escalar alcance magnitudes muy grandes que saturarían la función Softmax (provocando gradientes nulos).
+
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+
+Entrada X (T x d_model)
+
+    ├──► Q = X·W_Q (T x d_k) ──┐
+
+    ├──► K = X·W_K (T x d_k) ──┴──► [ Q·Kᵀ / √d_k ] ──► [ Softmax ] ──┐
+
+    └──► V = X·W_V (T x d_v) ──────────────────────────────────────────┴──► Salida Z (T x d_v)
+
+
+
+\end{lstlisting}
+
+\subsection{4. Atención Multicabeza (\emph{Multi-Head Self-Attention})}
+
+\subsubsection{4.1 Motivación}
+
+Una sola cabeza de atención solo proyecta en un espacio de subespacio único y puede capturar un único tipo de relación (p. ej., sujeto-verbo). El lenguaje requiere capturar múltiples relaciones simultáneamente (sintácticas, semánticas, modificadores).
+
+\subsubsection{4.2 Ecuaciones de Multi-Head Attention}
+
+Se entrenan \(h\) conjuntos independientes de matrices de proyección \(\{W_Q^{(i)}, W_K^{(i)}, W_V^{(i)}\}\):
+
+\$\$\textbackslash\{\}text\{head\}\_i = \textbackslash\{\}text\{Attention\}\textbackslash\{\}left(Q\textasciicircum{}\{(i)\}, K\textasciicircum{}\{(i)\}, V\textasciicircum{}\{(i)\}\textbackslash\{\}right) = \textbackslash\{\}text\{Attention\}\textbackslash\{\}left(X W\_Q\textasciicircum{}\{(i)\}, \textbackslash\{\}, X W\_K\textasciicircum{}\{(i)\}, \textbackslash\{\}, X W\_V\textasciicircum{}\{(i)\}\textbackslash\{\}right)\$\$
+
+Las salidas de todas las cabezas se concatenan y se proyectan linealmente con \(W_O \in \mathbb{R}^{h d_v \times d_{\text{model}}}\) para mantener las dimensiones de entrada:
+
+\$\$\textbackslash\{\}text\{MultiHead\}(X) = \textbackslash\{\}text\{Concat\}(\textbackslash\{\}text\{head\}\_1, \textbackslash\{\}text\{head\}\_2, \textbackslash\{\}dots, \textbackslash\{\}text\{head\}\_h) W\_O\$\$
+
+\subsubsection{4.3 Dimensiones de Tensores en Práctica (Batching)}
+
+\begin{itemize}
+
+\item Entrada \(X \in \mathbb{R}^{B \times T \times d_{\text{model}}}\) (\(B\): Batch size, \(T\): Longitud de secuencia).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item Proyección y cambio de forma para procesamiento paralelo:
+
+\end{itemize}
+
+\$\$Q, K, V \textbackslash\{\}rightarrow \textbackslash\{\}mathbb\{R\}\textasciicircum{}\{B \textbackslash\{\}times h \textbackslash\{\}times T \textbackslash\{\}times d\_k\}\$\$
+
+\begin{itemize}
+
+\item Salida de la atención por cabeza: \(\mathbb{R}^{B \times h \times T \times d_v}\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item Concatenación y proyección final: \(\mathbb{R}^{B \times T \times d_{\text{model}}}\).
+
+\end{itemize}
+
+\subsection{5. Arquitectura del Transformer: Encoder}
+
+El \emph{Encoder} mapea la secuencia de entrada en una representación contextualizada manteniendo la dimensión del eje temporal \(T\) y la dimensión del embedding \(d_{\text{model}}\). Consta de un apilamiento de \(N\) capas idénticas (\(N=6\) en la arquitectura original).
+
+\begin{lstlisting}[language=Python]
+
+Entrada (Tokens) ──► [ Input Embedding ] ──► (+) ──► [ Stack de N Capas Encoder ] ──► Representación Contextualizada
+
+                                             ▲
+
+                                    [ Positional Encoding ]
+
+
+
+\end{lstlisting}
+
+\subsubsection{5.1 Codificación Posicional (\emph{Positional Encoding})}
+
+Dado que la autoatención es invariante a permutaciones (trata las palabras como un conjunto no ordenado), se debe añadir explícitamente información de orden.
+
+\begin{itemize}
+
+\item \textbf{Incorporación:} Se suma directamente al embedding de entrada en el primer nivel: \(z_i = x_i + p_{\text{pos}}\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Sinusoidal Encoding (Original Transformer):}
+
+\end{itemize}
+
+\$\$PE\_\{(\textbackslash\{\}text\{pos\}, 2i)\} = \textbackslash\{\}sin\textbackslash\{\}left(\textbackslash\{\}frac\{\textbackslash\{\}text\{pos\}\}\{10000\textasciicircum{}\{2i / d\_\{\textbackslash\{\}text\{model\}\}\}\}\textbackslash\{\}right)\$\$
+
+\$\$PE\_\{(\textbackslash\{\}text\{pos\}, 2i+1)\} = \textbackslash\{\}cos\textbackslash\{\}left(\textbackslash\{\}frac\{\textbackslash\{\}text\{pos\}\}\{10000\textasciicircum{}\{2i / d\_\{\textbackslash\{\}text\{model\}\}\}\}\textbackslash\{\}right)\$\$
+
+\begin{itemize}
+
+\item \textbf{Learned Positional Embeddings (BERT, GPT):} Tabla de parámetros entrenables \(P \in \mathbb{R}^{T_{\text{max}} \times d_{\text{model}}}\).
+
+\end{itemize}
+
+\subsubsection{5.2 Conexiones Residuales y Normalización por Capa (Add \& Norm)}
+
+Se aplican alrededor de cada subcapa (atención y red feedforward):
+
+\$\$\textbackslash\{\}text\{Output\} = \textbackslash\{\}text\{LayerNorm\}(x + \textbackslash\{\}text\{Sublayer\}(x))\$\$
+
+\begin{itemize}
+
+\item \textbf{Residual Connections:} Añaden la entrada de la capa a la salida (\(x + \text{Sublayer}(x)\)), facilitando el flujo del gradiente sin desvanecimiento ni explosión.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Layer Normalization:} Normaliza a través de las características \(d_{\text{model}}\) independientemente para cada token.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Variantes de Orden:}
+
+\item \emph{Post-LN (Original):} \(\text{LN}(x + \text{Sublayer}(x))\).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \emph{Pre-LN (Moderno - GPT/BERT):} \(x + \text{Sublayer}(\text{LN}(x))\), mejora la estabilidad en redes muy profundas.
+
+\end{itemize}
+
+\subsubsection{5.3 Red Feedforward (FFN)}
+
+Se aplica de forma independiente a cada token (\emph{position-wise}):
+
+\$\$\textbackslash\{\}text\{FFN\}(x) = \textbackslash\{\}text\{Activation\}(x W\_1 + b\_1) W\_2 + b\_2\$\$
+
+\begin{itemize}
+
+\item Expande la dimensión intermedia a \(d_{ff}\) (típicamente \(d_{ff} = 4 \times d_{\text{model}}\)).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Funciones de Activación:}
+
+\item \emph{ReLU:} \(\max(0, x)\) (Transformer original).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \emph{GELU:} \(x \cdot \Phi(x)\) (Modelos modernos como BERT o GPT).
+
+\end{itemize}
+
+\subsection{6. Arquitectura del Transformer: Decoder}
+
+El \emph{Decoder} genera la secuencia objetivo token a token en modo autorregresivo.
+
+\begin{lstlisting}[language=Python]
+
+Entrada desplazada ──► [ Output Embedding + PE ] ──► [ Masked Self-Attention ] ──► [ Cross-Attention ] ──► [ FFN ] ──► [ Linear + Softmax ]
+
+
+
+\end{lstlisting}
+
+\subsubsection{6.1 Masked Multi-Head Self-Attention (Atención Causal)}
+
+Para evitar que el modelo acceda a tokens futuros durante el entrenamiento, se aplica una \textbf{máscara causal} sobre la matriz de puntuaciones previa al Softmax:
+
+\$\$\textbackslash\{\}text\{scores\}\_\{\textbackslash\{\}text\{masked\}\} = \textbackslash\{\}text\{scores\} + M, \textbackslash\{\}quad \textbackslash\{\}text\{donde \} M\_\{ij\} = \textbackslash\{\}begin\{cases\} 0 \& \textbackslash\{\}text\{si \} i \textbackslash\{\}ge j \textbackslash\{\}\textbackslash\{\} -\textbackslash\{\}infty \& \textbackslash\{\}text\{si \} i < j \textbackslash\{\}end\{cases\}\$\$
+
+Esto asegura que en la posición \(t\), la predicción solo dependa de los tokens anteriores \(y_{<t}\).
+
+\subsubsection{6.2 Cross-Attention (Atención Cruzada Encoder-Decoder)}
+
+Conecta la representación del \emph{Encoder} con el \emph{Decoder}:
+
+\begin{itemize}
+
+\item \textbf{Query (\(Q\)):} Proviene del \emph{Decoder} (\(X_{\text{dec}} W_Q\)).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Key (\(K\)) y Value (\(V\)):} Provienen de la salida final del \emph{Encoder} (\(H_{\text{enc}} W_K\), \(H_{\text{enc}} W_V\)).
+
+\end{itemize}
+
+\$\$\textbackslash\{\}text\{CrossAttention\}(Q, K, V) = \textbackslash\{\}text\{Softmax\}\textbackslash\{\}left( \textbackslash\{\}frac\{Q K\textasciicircum{}\textbackslash\{\}top\}\{\textbackslash\{\}sqrt\{d\_k\}\} \textbackslash\{\}right) V\$\$
+
+\subsubsection{6.3 Capas Finales y Proyección de Salida}
+
+\begin{enumerate}
+
+\item La salida oculta del decodificador \(H_{\text{dec}} \in \mathbb{R}^{B \times T_y \times d_{\text{model}}}\) pasa por una capa lineal que proyecta al tamaño del vocabulario \(V\):
+
+\end{enumerate}
+
+\$\$\textbackslash\{\}text\{logits\} = H\_\{\textbackslash\{\}text\{dec\}\} W\_\{\textbackslash\{\}text\{vocab\}\}\textasciicircum{}\textbackslash\{\}top + b\$\$
+
+\begin{enumerate}
+
+\item Se aplica \textbf{Softmax} para obtener la distribución de probabilidad \(P(y_t \mid y_{<t}, x)\).
+
+\end{enumerate}
+
+\subsection{7. Consejos de Entrenamiento, Inferencia y Arquitecturas}
+
+\subsubsection{7.1 Estrategias de Entrenamiento}
+
+\begin{itemize}
+
+\item \textbf{Subword Tokenization:} Uso de algoritmos como BPE (Byte-Pair Encoding) o WordPiece para evitar la explosión de vocabulario y manejar palabras fuera del diccionario (OOV).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Padding Masking:} Dado que los batches se rellenan con \texttt{<PAD>} para igualar longitudes, se aplica un enmascaramiento con \(-\infty\) para evitar atender a posiciones de relleno.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Warm-up Scheduling:} Incremento gradual de la tasa de aprendizaje durante los primeros pasos seguido de un decaimiento (p. ej., coseno).
+
+\end{itemize}
+
+\subsubsection{7.2 Estrategias de Decodificación en Inferencia}
+
+\begin{itemize}
+
+\item \textbf{Greedy Decoding:} Selecciona \(y_t = \arg\max_v P(v)\). Rápido, pero puede caer en subóptimos locales.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Beam Search:} Mantiene las \(k\) mejores hipótesis parciales acumulando sus probabilidades logarítmicas.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Temperature Scaling:} Ajusta los logits dividiéndolos por \(T\) antes del Softmax para controlar la creatividad/aleatoriedad:
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \(T < 1\): Distribución más picuda (más determinista).
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \(T > 1\): Distribución más plana (más diversa).
+
+\end{itemize}
+
+\subsubsection{7.3 Evolución de las Arquitecturas Transformer}
+
+\begin{itemize}
+
+\item \textbf{Encoder-Only (p. ej., BERT):} Utiliza atención bidireccional. Ideal para tareas de comprensión, clasificación de textos y extracción de entidades.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Decoder-Only (p. ej., GPT-3, LLaMA, Mistral):} Utiliza atención causal. Orientado a la generación de texto autorregresiva.
+
+\end{itemize}
+
+\begin{itemize}
+
+\item \textbf{Encoder-Decoder (p. ej., T5, BART):} Conserva la arquitectura original seq2seq para traducción y resumen.
+
+\end{itemize}
+
+\subsection{8. Práctica en Código (PyTorch)}
+
+A continuación se incluye una implementación ejecutable de un módulo de \textbf{Multi-Head Self-Attention} nativo con enmascaramiento causal opcional:
+
+\begin{lstlisting}[language=Python]
+
+import torch
+
+import torch.nn as nn
+
+import torch.nn.functional as F
+
+import math
+
+
+
+class MultiHeadSelfAttention(nn.Module):
+
+    def __init__(self, d_model=512, num_heads=8):
+
+        super(MultiHeadSelfAttention, self).__init__()
+
+        assert d_model % num_heads == 0, "d_model debe ser divisible por num_heads"
+
+        
+
+        self.d_model = d_model
+
+        self.num_heads = num_heads
+
+        self.d_k = d_model // num_heads
+
+        
+
+        # Proyecciones lineales para Q, K, V
+
+        self.W_q = nn.Linear(d_model, d_model, bias=False)
+
+        self.W_k = nn.Linear(d_model, d_model, bias=False)
+
+        self.W_v = nn.Linear(d_model, d_model, bias=False)
+
+        
+
+        # Proyección de salida
+
+        self.W_o = nn.Linear(d_model, d_model, bias=False)
+
+
+
+    def forward(self, x, mask=None):
+
+        batch_size, seq_len, _ = x.size()
+
+        
+
+        # 1. Proyección lineal -> (B, T, h, d_k) -> Transposición a (B, h, T, d_k)
+
+        Q = self.W_q(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
+
+        K = self.W_k(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
+
+        V = self.W_v(x).view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
+
+        
+
+        # 2. Scaled Dot-Product Attention
+
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
+
+        
+
+        if mask is not None:
+
+            scores = scores.masked_fill(mask == 0, -1e9)
+
+            
+
+        attn_weights = F.softmax(scores, dim=-1)
+
+        attn_output = torch.matmul(attn_weights, V) # (B, h, T, d_k)
+
+        
+
+        # 3. Concatenación de cabezas y proyección de salida
+
+        attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
+
+        output = self.W_o(attn_output)
+
+        
+
+        return output
+
+
+
+# Ejemplo de prueba rápida:
+
+if __name__ == "__main__":
+
+    B, T, d_model = 2, 5, 64
+
+    x = torch.randn(B, T, d_model)
+
+    
+
+    # Máscara Causal (Triangular Inferior)
+
+    causal_mask = torch.tril(torch.ones(T, T)).unsqueeze(0).unsqueeze(0)
+
+    
+
+    mha = MultiHeadSelfAttention(d_model=d_model, num_heads=4)
+
+    out = mha(x, mask=causal_mask)
+
+    print(f"Dimensión del tensor de entrada: {x.shape}")
+
+    print(f"Dimensión del tensor procesado: {out.shape}")
+
+
+
+\end{lstlisting}
+\section{Conexión con las prácticas}
+
+Las prácticas implementan atención, multi-head attention, codificaciones posicionales, AddNorm, FFN y un encoder Transformer; los tensores de prueba y las máscaras muestran el flujo de dimensiones.
+
+\subsection{Fuente práctica: \texttt{11\_01\_Attention.ipynb}}
+
+Ruta: code/11\_01\_Attention/11\_01\_Attention.ipynb
+
+\textbf{Apartados detectados:} 11\_01 Attention mechanisms.
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import math
+import torch
+import torch.nn as nn
+
+
+class SelfAttention(nn.Module):
+
+    def __init__(self, d_model, d_k, d_v):
+        super(SelfAttention, self).__init__()
+
+        self.W_Q = nn.Linear(d_model, d_k, bias =False)
+        self.W_K = nn.Linear(d_model, d_k, bias =False)
+        self.W_V = nn.Linear(d_model, d_v, bias =False)
+
+        self.scale = math.sqrt(d_k)
+
+    def forward(self, X):
+        Q = self.W_Q(X) 
+        K = self.W_K(X)  
+        V = self.W_V(X)  
+
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / self.scale
+
+        attention_weights = torch.softmax(scores, dim=-1)
+
+        outputs = torch.matmul(attention_weights, V)
+
+        return outputs
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{11\_02\_Attention.ipynb}}
+
+Ruta: code/11\_02\_Attention/11\_02\_Attention.ipynb
+
+\textbf{Apartados detectados:} 11\_02 Multi-head attention and Transformer encoder; 1. The `MultiHeadSelfAttention` class; 2. The `SinusoidalPositionalEncoding` class; 3. The `LearnedPositionalEncoding` class; 4. The `AddNorm` class.
+
+Salidas gráficas almacenadas: 2.
+
+\textbf{Salida textual conservada:} \begin{quote}Forma de la entrada: torch.Size([32, 10, 512]) | Forma de la salida : torch.Size([32, 10, 512]) | Input shape : torch.Size([2, 10, 64]) | Output shape: torch.Size([2, 10, 64])\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import math
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+
+
+
+class MultiHeadSelfAttention(nn.Module):
+
+    def __init__(self, d_model, d_k, d_v, num_heads):
+        super(MultiHeadSelfAttention, self).__init__()
+
+        self.num_heads = num_heads
+        self.d_k = d_k
+        self.d_v = d_v
+        self.d_model = d_model
+
+        self.W_Q = nn.Linear(d_model, num_heads * d_k, bias=False)
+        self.W_K = nn.Linear(d_model, num_heads * d_k, bias=False)
+        self.W_V = nn.Linear(d_model, num_heads * d_v, bias=False)
+
+        self.W_o = nn.Linear(num_heads * d_v, d_model, bias=False)
+
+        self.scale = math.sqrt(d_k)
+
+    def forward(self, x):
+        B, T, _ = x.shape
+
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{11\_03\_Attention.ipynb}}
+
+Ruta: code/11\_03\_Attention/11\_03\_Attention.ipynb
+
+\textbf{Apartados detectados:} 11\_03 Transformer decoder; 1. `MultiHeadAttention`; 2. `DecoderLayer`; 3. Mask helper functions (additive masks); 4. Full `Decoder` stack (batched).
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Salida textual conservada:} \begin{quote}Cross-Attention Output Shape: torch.Size([2, 10, 64]) | Self-Attention Output Shape : torch.Size([2, 10, 64]) | ✅ Decoder Output shape: torch.Size([2, 10, 64]) | ✅ Logits Output shape : torch.Size([2, 10, 1000])\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import math
+import torch
+import torch.nn as nn
+class SinusoidalPositionalEncoding(nn.Module):
+    def __init__(self, max_len, d_model):
+        super().__init__()
+        pe = torch.zeros(max_len, d_model)
+        pos = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = torch.sin(pos * div_term)
+        pe[:, 1::2] = torch.cos(pos * div_term)
+
+        self.register_buffer("pe", pe)
+
+    def forward(self, x):
+        return x + self.pe[:x.shape[1], :]
+
+
+class LearnedPositionalEncoding(nn.Module):
+    def __init__(self, max_len, d_model):
+        super().__init__()
+        self.pos_embedding = nn.Embedding(max_len, d_model)
+        nn.init.normal_(self.pos_embedding.weight, mean=0.0, std=0.02)
+
+    def forward(self, x):
+        B, T, _ = x.shape
+        positions = torch.arange(0, T, device=x.device)
+
+\end{lstlisting}
+
+\subsection{Fuente práctica: \texttt{11\_04\_Submission\_task.ipynb}}
+
+Ruta: code/11\_04\_Submission\_task/11\_04\_Submission\_task.ipynb
+
+\textbf{Apartados detectados:} 11\_04 Submission task; Exercise 0 — Bring your building blocks; Exercise 1 — Verify `MultiHeadAttention` supports additive masks; Exercise 2 — Thread the encoder padding mask through `EncoderLayer` → `Encoder`; Exercise 3 — Complete the `Decoder` masks.
+
+Salidas gráficas almacenadas: 0.
+
+\textbf{Salida textual conservada:} \begin{quote}--- Starting Training --- | Epoch   1 | Loss: 2.9569 | Epoch  30 | Loss: 0.6204 | Epoch  60 | Loss: 0.0469\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import math
+import torch
+import torch.nn as nn
+
+class SinusoidalPositionalEncoding(nn.Module):
+    def __init__(self, max_len, d_model):
+        super().__init__()
+        pe = torch.zeros(max_len, d_model)
+        pos = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = torch.sin(pos * div_term)
+        pe[:, 1::2] = torch.cos(pos * div_term)
+
+        self.register_buffer("pe", pe)
+
+    def forward(self, x):
+        return x + self.pe[:x.shape[1], :]
+
+class LearnedPositionalEncoding(nn.Module):
+    def __init__(self, max_len, d_model):
+        super().__init__()
+        self.pos_embedding = nn.Embedding(max_len, d_model)
+        nn.init.normal_(self.pos_embedding.weight, mean=0.0, std=0.02)
+
+    def forward(self, x):
+        B, T, _ = x.shape
+        positions = torch.arange(0, T, device=x.device)
+
+\end{lstlisting}
+\section{Autoevaluación razonada}
+
+\subsection*{Pregunta} ¿Por qué se escala el producto QK\textasciicircum{}T?
+
+\textbf{Solución.} Para controlar su magnitud antes de softmax y evitar saturación cuando crece la dimensión de las claves.
+
+\subsection*{Pregunta} ¿Qué aporta la codificación posicional?
+
+\textbf{Solución.} Añade información sobre el orden, que no estaría determinada por la atención sobre un conjunto de tokens sin posiciones.
+\section{Fuentes y trazabilidad}
+
+\textbf{Diapositivas:}
+
+\begin{itemize}
+
+\item \path{slides/11\_Attention\_mechanisms\_and\_transformers.pdf}
+
+\end{itemize}
+
+\textbf{Nota personal:} apuntes/Apuntes del Tema 11 - Attention Mechanisms and Transformers.md

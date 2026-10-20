@@ -1,0 +1,386 @@
+\chapter{Regresión lineal}
+\section{Apuntes del Tema 3 y Tema 4: Modelos Lineales — Regresión Lineal y Regresión Logística}
+
+\subsection{1. Regresión Lineal}
+
+\subsubsection{1.1 Introducción y Planteamiento del Modelo}
+
+\begin{itemize}
+
+\item \textbf{Definición:} Modelo paramétrico supervisado para predecir un valor objetivo continuo \(y \in \mathbb{R}\) a partir de un vector de características \(x \in \mathbb{R}^d\).
+
+\item \textbf{Ecuación del Modelo:}
+
+\end{itemize}
+
+  \$\$\textbackslash\{\}hat\{y\} = w\_1 x\_1 + w\_2 x\_2 + \textbackslash\{\}dots + w\_d x\_d + b = x\textasciicircum{}\textbackslash\{\}top w + b\$\$
+
+  donde \(w \in \mathbb{R}^d\) es el vector de pesos (pesos de las características) y \(b \in \mathbb{R}\) es el sesgo (\emph{bias} o intersección).
+
+\begin{itemize}
+
+\item \textbf{Interpretación Geométrica:} Representa el ajuste de un hiperplano \(d\)-dimensional embebido en un espacio de dimensión \(\mathbb{R}^{d+1}\):
+
+\item \(d=1\): Una recta de regresión.
+
+\item \(d=2\): Un plano de regresión.
+
+\end{itemize}
+
+\subsubsection{1.2 Función de Pérdida (Error Cuadrático Medio - MSE)}
+
+Para medir la discrepancia entre las predicciones \(\hat{y}^{(i)}\) y los valores reales \(y^{(i)}\), se define el residuo \(r^{(i)} = y^{(i)} - \hat{y}^{(i)}\).
+
+La función de pérdida promedio sobre un dataset de \(n\) muestras es el \textbf{MSE (Mean Squared Error)}:
+
+\$\$\textbackslash\{\}mathcal\{L\}(w, b) = \textbackslash\{\}frac\{1\}\{n\} \textbackslash\{\}sum\_\{i=1\}\textasciicircum{}\{n\} \textbackslash\{\}left(y\textasciicircum{}\{(i)\} - \textbackslash\{\}hat\{y\}\textasciicircum{}\{(i)\}\textbackslash\{\}right)\textasciicircum{}2 = \textbackslash\{\}frac\{1\}\{n\} \textbackslash\{\}Vert\{\} y - (Xw + b\textbackslash\{\}mathbf\{1\}) \textbackslash\{\}Vert\{\}\_2\textasciicircum{}2\$\$
+
+\subsubsection{1.3 Visión Probabilística: Derivación desde Máxima Verosimilitud (MLE)}
+
+El uso del error cuadrático medio no es arbitrario; surge de asumir que el valor real \(y\) se genera mediante una relación lineal determinista más un \textbf{ruido gaussiano} centrado en cero \(\epsilon^{(i)} \sim \mathcal{N}(0, \sigma^2)\):
+
+\$\$y\textasciicircum{}\{(i)\} = (x\textasciicircum{}\{(i)\})\textasciicircum{}\textbackslash\{\}top w + b + \textbackslash\{\}epsilon\textasciicircum{}\{(i)\} \textbackslash\{\}implies y\textasciicircum{}\{(i)\} \textbackslash\{\}mid x\textasciicircum{}\{(i)\} \textbackslash\{\}sim \textbackslash\{\}mathcal\{N\}\textbackslash\{\}left((x\textasciicircum{}\{(i)\})\textasciicircum{}\textbackslash\{\}top w + b, \textbackslash\{\}, \textbackslash\{\}sigma\textasciicircum{}2\textbackslash\{\}right)\$\$
+
+Al maximizar la función de Log-Verosimilitud (\emph{Log-Likelihood}) de este modelo bajo muestras independientes e idénticamente distribuidas (\(i.i.d.\)), la maximización equivale exactamente a la \textbf{minimización del MSE}.
+
+\subsubsection{1.4 Solución Analítica vs. Descenso de Gradiente}
+
+\begin{itemize}
+
+\item \textbf{Solución Analítica (Ecuación Normal):}
+
+\end{itemize}
+
+  Añadiendo una columna de unos a la matriz de características (\(\tilde{X} = [\mathbf{1}, X]\)), se obtiene el mínimo global en un solo paso:
+
+  \$\$\textbackslash\{\}tilde\{w\} = (\textbackslash\{\}tilde\{X\}\textasciicircum{}\textbackslash\{\}top \textbackslash\{\}tilde\{X\})\textasciicircum{}\{-1\} \textbackslash\{\}tilde\{X\}\textasciicircum{}\textbackslash\{\}top y\$\$
+
+\begin{itemize}
+
+\item \emph{Inconveniente:} Invertir la matriz \(\tilde{X}^\top \tilde{X}\) requiere un coste computacional \(O(d^3)\), siendo inviable para dimensiones elevadas (\(d\) muy grande).
+
+\item \textbf{Descenso de Gradiente (Iterativo):}
+
+\end{itemize}
+
+  Actualización iterativa mediante las derivadas parciales de la pérdida:
+
+  \$\$\textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{L\}\}\{\textbackslash\{\}partial w\_j\} = -\textbackslash\{\}frac\{2\}\{n\} \textbackslash\{\}sum\_\{i=1\}\textasciicircum{}\{n\} \textbackslash\{\}left(y\textasciicircum{}\{(i)\} - \textbackslash\{\}hat\{y\}\textasciicircum{}\{(i)\}\textbackslash\{\}right) x\_j\textasciicircum{}\{(i)\}, \textbackslash\{\}quad \textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{L\}\}\{\textbackslash\{\}partial b\} = -\textbackslash\{\}frac\{2\}\{n\} \textbackslash\{\}sum\_\{i=1\}\textasciicircum{}\{n\} \textbackslash\{\}left(y\textasciicircum{}\{(i)\} - \textbackslash\{\}hat\{y\}\textasciicircum{}\{(i)\}\textbackslash\{\}right)\$\$
+
+  \$\$w\_j \textbackslash\{\}leftarrow w\_j - \textbackslash\{\}eta \textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{L\}\}\{\textbackslash\{\}partial w\_j\}, \textbackslash\{\}quad b \textbackslash\{\}leftarrow b - \textbackslash\{\}eta \textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{L\}\}\{\textbackslash\{\}partial b\}\$\$
+
+\subsection{2. Regresión Logística}
+
+\subsubsection{2.1 Concepto y Función Sigmoide}
+
+\begin{itemize}
+
+\item \textbf{Definición:} Modelo paramétrico supervisado para \textbf{clasificación binaria} que predice la probabilidad \(p = P(y=1 \mid x) \in (0, 1)\).
+
+\item \textbf{Transformación Sigmoide / Logística:}
+
+\end{itemize}
+
+  Para mapear el valor continuo lineal \(z = x^\top w + b\) (denominado \emph{logit}) al rango probabilístico \((0, 1)\), se aplica la función sigmoide \(\sigma(z)\):
+
+  \$\$\textbackslash\{\}hat\{y\} = \textbackslash\{\}sigma(z) = \textbackslash\{\}frac\{1\}\{1 + e\textasciicircum{}\{-z\}\}\$\$
+
+\begin{itemize}
+
+\item **Frontera de Decisión (\emph{Decision Boundary}):**
+
+\end{itemize}
+
+  El umbral estándar \(P(y=1 \mid x) = 0.5\) corresponde a \(z = 0\) (\(x^\top w + b = 0\)), formando un hiperplano lineal de separación en el espacio de características.
+
+\subsubsection{2.2 Función de Pérdida (Entropía Cruzada Binaria / \emph{Binary Cross-Entropy})}
+
+Utilizar MSE sobre salidas sigmoideas genera una superficie de pérdida no convexa llena de zonas llanas (\emph{plateaus}) donde el gradiente se desvanece (\(\nabla \mathcal{L} \approx 0\)). Por ello, se emplea la \textbf{Pérdida de Entropía Cruzada Binaria}:
+
+\$\$\textbackslash\{\}mathcal\{L\}(y, \textbackslash\{\}hat\{y\}) = - \textbackslash\{\}left[ y \textbackslash\{\}log(\textbackslash\{\}hat\{y\}) + (1 - y) \textbackslash\{\}log(1 - \textbackslash\{\}hat\{y\}) \textbackslash\{\}right]\$\$
+
+\begin{itemize}
+
+\item \textbf{Propiedades:} Es strictly convexa respecto a los parámetros \((w, b)\), garantizando que el descenso de gradiente alcance el mínimo global sin quedar atrapado en mínimos locales subóptimos.
+
+\end{itemize}
+
+\subsubsection{2.3 Visión Probabilística: Derivación desde la Distribución de Bernoulli}
+
+Al asumir que la etiqueta objetivo \(y \in \{0, 1\}\) sigue una \textbf{distribución de Bernoulli} paramétrica con probabilidad de éxito \(p = \hat{y} = \sigma(z)\):
+
+\$\$P(y \textbackslash\{\}mid x) = \textbackslash\{\}hat\{y\}\textasciicircum{}y (1 - \textbackslash\{\}hat\{y\})\textasciicircum{}\{(1-y)\}\$\$
+
+La función de Entropía Cruzada equivale numéricamente al negativo de la función de Log-Verosimilitud (\emph{Negative Log-Likelihood - NLL}). Por consiguiente, ajustar la Regresión Logística mediante Entropía Cruzada es equivalente a realizar la \textbf{Estimación de Máxima Verosimilitud (MLE)} de un proceso de Bernoulli.
+
+\subsection{3. Escalado de Características y Expansión Polinomial}
+
+\subsubsection{3.1 Importancia del Escalado de Características (\emph{Feature Scaling})}
+
+Cuando las características poseen órdenes de magnitud desiguales, las curvas de nivel de la función de pérdida se deforman formando elipses alargadas. Esto provoca que el descenso de gradiente oscile en un patrón ineficiente en \emph{zig-zag}, retrasando drásticamente la convergencia.
+
+\begin{itemize}
+
+\item \textbf{Estandarización (Standardization):}
+
+\end{itemize}
+
+  \$\$x\_j \textbackslash\{\}mapsto \textbackslash\{\}frac\{x\_j - \textbackslash\{\}mu\_j\}\{\textbackslash\{\}sigma\_j\}\$\$
+
+  Transforma cada característica para que tenga media \(\mu = 0\) y varianza unitaria \(\sigma^2 = 1\), volviendo las curvas de nivel más circulares y estabilizando las actualizaciones de los gradientes.
+
+\subsubsection{3.2 Expansión Polinomial (\emph{Polynomial Features})}
+
+Cuando las clases no son separables por una frontera lineal recta, es posible mapear el espacio de características original a un espacio de mayor dimensión introduciendo combinaciones polinomiales.
+
+\begin{itemize}
+
+\item \textbf{Ejemplo para 2 características (\(x_1, x_2\)) a grado \(d=2\):}
+
+\end{itemize}
+
+  \$\$z = w\_1 x\_1 + w\_2 x\_2 + w\_3 x\_1\textasciicircum{}2 + w\_4 x\_2\textasciicircum{}2 + w\_5 x\_1 x\_2 + b\$\$
+
+\begin{itemize}
+
+\item \textbf{Ventajas e Inconvenientes:}
+
+\item Permite capturar límites de decisión no lineales complejas (elipses, parábolas) conservando la linealidad en los parámetros.
+
+\item Crecimiento exponencial del número de características al aumentar el grado \(d\), elevando drásticamente el riesgo de sobreajuste (\emph{overfitting}) y haciendo indispensable el escalado.
+
+\end{itemize}
+
+\subsection{4. Regularización en Modelos Lineales (\(L_1\) y \(L_2\))}
+
+Para evitar que el modelo asigne pesos desproporcionadamente grandes a las características (previniendo el sobreajuste), se añade un término de penalización sobre los pesos a la función de pérdida:
+
+\$\$\textbackslash\{\}mathcal\{J\}(w, b) = \textbackslash\{\}mathcal\{L\}(w, b) + \textbackslash\{\}Omega(w)\$\$
+
+| Regularización | Término de Penalización \(\Omega(w)\) | Forma Geométrica | Comportamiento del Gradiente y Solución |
+
+| :--- | :--- | :--- | :--- |
+
+| \textbf{\(L_2\) (Ridge)} | \(\frac{\lambda}{2} \Vert{}w\Vert{}_2^2 = \frac{\lambda}{2} \sum_{j=1}^{d} w_j^2\) | Esfera / Círculo suave | Reduce la magnitud de todos los pesos proporcionalmente (\(w \leftarrow w(1 - \eta \lambda)\)), pero \textbf{rara vez los hace exactamente cero}. |
+
+| \textbf{\(L_1\) (Lasso)} | \(\lambda \Vert{}w\Vert{}_1 = \lambda \sum_{j=1}^{d} \vert{}w_j\vert{}\) | Diamante / Hiperoctaedro con esquinas en los ejes | Mantiene una magnitud de gradiente constante (\(\lambda \cdot \text{signo}(w)\)), \textbf{conduciendo pesos exactamente a cero} y generando soluciones esparsas (\emph{feature selection}). |
+
+\subsection{5. Práctica y Aplicación en Código (PyTorch y Scikit-Learn)}
+
+\begin{lstlisting}[language=Python]
+
+import torch
+
+import torch.nn as nn
+
+import torch.optim as optim
+
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+
+from sklearn.pipeline import Pipeline
+
+
+
+# --------------------------------------------------------------------------
+
+# 1. Definición del Modelo de Regresión Logística en PyTorch
+
+# --------------------------------------------------------------------------
+
+class LogisticRegressionPyTorch(nn.Module):
+
+    def __init__(self, input_dim):
+
+        super(LogisticRegressionPyTorch, self).__init__()
+
+        # Capa lineal que calcula el logit z = xW + b
+
+        self.linear = nn.Linear(input_dim, 1)
+
+
+
+    def forward(self, x):
+
+        # Retorna el logit directamente. 
+
+        # BCEWithLogitsLoss aplica la sigmoide de forma numéricamente estable.
+
+        return self.linear(x)
+
+
+
+# --------------------------------------------------------------------------
+
+# 2. Configuración y Bucle de Entrenamiento
+
+# --------------------------------------------------------------------------
+
+def train_logistic_regression(X_train_tensor, y_train_tensor, num_epochs=100, lr=0.01, weight_decay=1e-4):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    
+
+    # Instanciación
+
+    input_dim = X_train_tensor.shape[1]
+
+    model = LogisticRegressionPyTorch(input_dim).to(device)
+
+    
+
+    # Función de pérdida (Binary Cross Entropy con Sigmoide integrada)
+
+    criterion = nn.BCEWithLogitsLoss()
+
+    
+
+    # Optimizador SGD con L2 Regularization (weight_decay)
+
+    optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+    
+
+    X_train_tensor = X_train_tensor.to(device)
+
+    y_train_tensor = y_train_tensor.to(device).unsqueeze(1) # (B, 1)
+
+    
+
+    for epoch in range(1, num_epochs + 1):
+
+        model.train()
+
+        
+
+        # 1. Limpiar gradientes
+
+        optimizer.zero_grad()
+
+        
+
+        # 2. Forward pass (logits)
+
+        logits = model(X_train_tensor)
+
+        loss = criterion(logits, y_train_tensor)
+
+        
+
+        # 3. Backward pass y actualización de parámetros
+
+        loss.backward()
+
+        optimizer.step()
+
+        
+
+        if epoch % 20 == 0 or epoch == 1:
+
+            print(f"Época [{epoch:3d}/{num_epochs}] | Loss: {loss.item():.4f}")
+
+            
+
+    return model
+
+
+
+# --------------------------------------------------------------------------
+
+# 3. Implementación en Scikit-Learn
+
+# --------------------------------------------------------------------------
+
+def build_sklearn_logistic_pipeline(degree=2, penalty='l2', C=1.0):
+
+    """
+
+    Crea un pipeline completo con escalado, expansión polinomial y regresión logística.
+
+    Note: C en scikit-learn es la inversa de lambda (C = 1 / lambda).
+
+    """
+
+    pipeline = Pipeline([
+
+        ('scaler', StandardScaler()),
+
+        ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
+
+        ('logistic', LogisticRegression(penalty=penalty, C=C, solver='saga', random_state=42))
+
+    ])
+
+    return pipeline
+
+\end{lstlisting}
+\section{Conexión con las prácticas}
+
+La práctica recorre solución analítica, bucle de entrenamiento, convergencia, separación train/validation, superficie de pérdida y trayectoria del descenso de gradiente.
+
+\subsection{Fuente práctica: \texttt{03\_01\_Linear\_regression.ipynb}}
+
+Ruta: code/03\_01\_Linear\_regression/03\_01\_Linear\_regression.ipynb
+
+\textbf{Apartados detectados:} 03\_01 Linear regression; 1. Create a synthetic dataset (1D); 2. Try various values for (w, b); 3. Analytic solution; 4. Training loop.
+
+Salidas gráficas almacenadas: 16.
+
+\textbf{Salida textual conservada:} \begin{quote}<Figure size 600x400 with 1 Axes> | <Figure size 600x400 with 1 Axes> | torch.Size([200, 2]) | tensor([[-1.0730],\end{quote}
+
+\textbf{Fragmento representativo:}
+
+\begin{lstlisting}[language=Python]
+
+import numpy as np
+import torch
+import matplotlib.pyplot as plt
+
+np.random.seed(123)
+torch.manual_seed(123)
+
+w_true = 2.5
+b_true = -1.0
+noise_std = 0.6 
+
+n = 200
+
+x = np.random.uniform(-3, 3, 200)
+
+noise = np.random.normal(0, noise_std, n)
+
+y = w_true*x + b_true+ noise
+
+x_t = torch.tensor(x, dtype=torch.float32).view(-1,1)
+y_t = torch.tensor(y, dtype=torch.float32).view(-1,1)
+
+def plot_dataset(x_t, y_t):
+
+    plt.figure(figsize=(6, 4))
+    plt.scatter(x, y, alpha=0.7)
+    
+    plt.xlabel("x")
+
+\end{lstlisting}
+\section{Autoevaluación razonada}
+
+\subsection*{Pregunta} ¿Qué indica una curva de pérdida que deja de descender?
+
+\textbf{Solución.} Que el paso puede ser demasiado grande, el entrenamiento puede haber convergido o existe un problema de escala/implementación.
+
+\subsection*{Pregunta} ¿Qué diferencia hay entre la solución analítica y SGD?
+
+\textbf{Solución.} La primera resuelve una ecuación global bajo supuestos adecuados; SGD actualiza parámetros mediante gradientes de lotes o ejemplos.
+\section{Fuentes y trazabilidad}
+
+\textbf{Diapositivas:}
+
+\begin{itemize}
+
+\item \path{slides/03\_Linear\_regression.pdf}
+
+\end{itemize}
+
+\textbf{Nota personal:} apuntes/Apuntes del Tema 3 y Tema 4 - Modelos Lineales — Regresión Lineal y Regresión Logística.md
