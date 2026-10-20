@@ -335,5 +335,3 @@ if __name__ == "__main__":
     train_rnn_demo()
 
 ```
-
-Dime si necesitas que profundicemos en algún aspecto de las **RNNs, LSTMs o GRUs** o si te gustaría preparar un cuestionario interactivo para poner a prueba estos conceptos de cara a tu máster.

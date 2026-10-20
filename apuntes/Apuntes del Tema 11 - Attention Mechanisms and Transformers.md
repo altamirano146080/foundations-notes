@@ -437,5 +437,3 @@ if __name__ == "__main__":
 
 ```
 
-
-Dime si necesitas hacer alguna prueba de autoevaluación o repasar algún detalle específico de las fuentes del máster.
