@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plataforma de estudio trazable para Foundations of Machine Learning and Deep Learning">
+  <title>ML Studio | Ruta de estudio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/"><span class="brand-mark">μ</span><span>ML Studio<small>ruta de estudio</small></span></a>
+    <label class="search"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Buscar conceptos, prácticas o fuentes" aria-label="Buscar en el temario"></label>
+    <button id="theme-toggle" class="icon-button" type="button" aria-label="Cambiar tema">◐</button>
+  </header>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div class="sidebar-heading">Tu recorrido</div>
+      <nav id="topic-nav"></nav>
+      <div class="sidebar-footer">
+        <div class="progress-label"><span>Progreso global</span><strong id="global-progress">0%</strong></div>
+        <div class="progress-track"><span id="global-progress-bar"></span></div>
+        <button id="reset-progress" class="text-button" type="button">Reiniciar progreso</button>
+      </div>
+    </aside>
+    <main id="app" tabindex="-1"></main>
+  </div>
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
