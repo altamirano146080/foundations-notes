@@ -6,19 +6,16 @@
 \subsubsection{1.1 Filosofía del Ensamble}
 
 \begin{itemize}
-
-\item \textbf{Limitaciones de un Modelo Individual:}
-
-\item Un modelo demasiado simple puede subajustar (\emph{underfit}), mostrando un alto sesgo (\emph{bias}) y bajo rendimiento.
-
-\item Un modelo excesivamente complejo puede sobreajustar (\emph{overfit}), memorizando el ruido de los datos de entrenamiento y mostrando alta varianza (\emph{variance}).
-
-\item Algunos modelos (como los árboles de decisión no podados) son inestables: pequeñas variaciones en los datos de entrenamiento generan cambios drásticos en la estructura del árbol.
-
-\item \textbf{Idea Clave:} Combinar múltiples estimadores débiles (\emph{weak learners}) para construir un estimador fuerte (\emph{strong learner}) cuya predicción colectiva sea más precisa, estable y robusta que cualquiera de los modelos individuales por separado.
-
-\item \textbf{Diversidad:} Para que un ensamble funcione eficazmente, los estimadores individuales deben cometer errores de manera independiente o desacoplada (diversidad de hipótesis).
-
+	\item \textbf{Limitaciones de un Modelo Individual:}
+	\begin{itemize}
+		\item Un modelo demasiado simple puede subajustar (\emph{underfit}), mostrando un alto sesgo (\emph{bias}) y bajo rendimiento.
+		\item Un modelo excesivamente complejo puede sobreajustar (\emph{overfit}), memorizando el ruido de los datos de entrenamiento y mostrando alta varianza (\emph{variance}).
+		\item Algunos modelos (como los árboles de decisión no podados) son inestables: pequeñas variaciones en los datos de entrenamiento generan cambios drásticos en la estructura del modelo.
+	\end{itemize}
+	
+	\item \textbf{Idea Clave:} Combinar múltiples estimadores débiles (\emph{weak learners}) para construir un estimador fuerte (\emph{strong learner}) cuya predicción colectiva sea más precisa, estable y robusta que cualquiera de los modelos individuales por separado.
+	
+	\item \textbf{Diversidad:} Para que un ensamble funcione eficazmente, los estimadores individuales deben cometer errores de manera independiente o desacoplada (diversidad de hipótesis).
 \end{itemize}
 
 \subsection{2. Bagging y Random Forest}
@@ -26,53 +23,34 @@
 \subsubsection{2.1 Bagging (\emph{Bootstrap Aggregating})}
 
 \begin{itemize}
-
-\item \textbf{Objetivo:} Reducir la \textbf{varianza} de modelos inestables y con alta varianza (ej. árboles de decisión profundos) sin incrementar su sesgo.
-
-\item \textbf{Mecanismo Paso a Paso:}
-
+	\item \textbf{Objetivo:} Reducir la \textbf{varianza} de modelos inestables y con alta varianza (ej. árboles de decisión profundos) sin incrementar su sesgo.
+	
+	\item \textbf{Mecanismo Paso a Paso:}
+	\begin{enumerate}
+		\item \textbf{Muestreo Bootstrap:} Dado un dataset $\mathcal{D}$ de $N$ muestras, se generan $B$ subconjuntos $\mathcal{D}_b$ extrayendo $N$ muestras con reemplazo de $\mathcal{D}$.
+		\item \textbf{Entrenamiento Independiente:} Se entrena un estimador $h_b(x)$ de forma completamente independiente sobre cada subconjunto $\mathcal{D}_b$.
+		\item \textbf{Agregación:}
+		\begin{itemize}
+			\item \textbf{Clasificación:} Voto mayoritario:
+			$$\hat{y} = \arg\max_{c} \sum_{b=1}^{B} \mathbb{I}(h_b(x) = c)$$
+			\item \textbf{Regresión:} Promedio simple:
+			$$\hat{y} = \frac{1}{B} \sum_{b=1}^{B} h_b(x)$$
+		\end{itemize}
+	\end{enumerate}
 \end{itemize}
-
-\begin{enumerate}
-
-\item \textbf{Muestreo Bootstrap:} Dado un dataset \(\mathcal{D}\) de \(N\) muestras, se generan \(B\) subconjuntos \(\mathcal{D}_b\) extrayendo \(N\) muestras con reemplazo de \(\mathcal{D}\).
-
-\item \textbf{Entrenamiento Independiente:} Se entrena un estimador \(h_b(x)\) de forma completamente independiente sobre cada subconjunto \(\mathcal{D}_b\).
-
-\item \textbf{Agregación:}
-
-\end{enumerate}
-
-\begin{itemize}
-
-\item \textbf{Clasificación:} Voto mayoritario:
-
-\end{itemize}
-
-       \$\$\textbackslash\{\}hat\{y\} = \textbackslash\{\}arg\textbackslash\{\}max\_\{c\} \textbackslash\{\}sum\_\{b=1\}\textasciicircum{}\{B\} \textbackslash\{\}mathbb\{I\}(h\_b(x) = c)\$\$
-
-\begin{itemize}
-
-\item \textbf{Regresión:} Promedio simple:
-
-\end{itemize}
-
-       \$\$\textbackslash\{\}hat\{y\} = \textbackslash\{\}frac\{1\}\{B\} \textbackslash\{\}sum\_\{b=1\}\textasciicircum{}\{B\} h\_b(x)\$\$
 
 \subsubsection{2.2 Random Forest}
 
 \begin{itemize}
-
-\item \textbf{Mejora sobre Bagging:} En el Bagging estándar, si existe una característica dominante, todos los árboles la elegirán en la raíz, resultando en un conjunto de árboles altamente correlacionados.
-
-\item \textbf{Decorrelación de Árboles:} Random Forest añade una segunda fuente de aleatoriedad: en cada división (\emph{split}) de cada árbol, se selecciona al azar un subconjunto reducido de \(m\) características de las \(d\) totales disponibles (\(m \ll d\)).
-
-\item Para clasificación: típicamente \(m = \sqrt{d}\).
-
-\item Para regresión: típicamente \(m = \frac{d}{3}\).
-
-\item \textbf{Evaluación Out-Of-Bag (OOB):} Dado que cada muestra \emph{bootstrap} deja fuera aproximadamente un \(36.8\%\) de los datos (\(1 - 1/e \approx 0.632\) incluidos), estas muestras "no vistas" sirven como conjunto de validación implícito (\emph{OOB score}) sin requerir un split de validación adicional.
-
+	\item \textbf{Mejora sobre Bagging:} En el Bagging estándar, si existe una característica dominante, todos los árboles la elegirán en la raíz, resultando en un conjunto de árboles altamente correlacionados.
+	
+	\item \textbf{Decorrelación de Árboles:} Random Forest añade una segunda fuente de aleatoriedad: en cada división (\emph{split}) de cada árbol, se selecciona al azar un subconjunto reducido de $m$ características de las $d$ totales disponibles ($m \ll d$).
+	\begin{itemize}
+		\item Para clasificación: típicamente $m = \sqrt{d}$.
+		\item Para regresión: típicamente $m = \frac{d}{3}$.
+	\end{itemize}
+	
+	\item \textbf{Evaluación Out-Of-Bag (OOB):} Dado que cada muestra \emph{bootstrap} deja fuera aproximadamente un $36.8\%$ de los datos ($1 - 1/e \approx 0.632$ incluidos), estas muestras "no vistas" sirven como conjunto de validación implícito (\emph{OOB score}) sin requerir un split de validación adicional.
 \end{itemize}
 
 \subsection{3. Boosting: AdaBoost y Gradient Boosting (XGBoost)}
@@ -80,313 +58,123 @@
 \subsubsection{3.1 AdaBoost (\emph{Adaptive Boosting})}
 
 \begin{itemize}
-
-\item \textbf{Mecanismo:} Entrena estimadores de forma \textbf{secuencial}. Mantiene una distribución de pesos \(D_t(i)\) sobre las muestras del dataset.
-
-\item \textbf{Algoritmo Paso a Paso:}
-
+	\item \textbf{Mecanismo:} Entrena estimadores de forma \textbf{secuencial}. Mantiene una distribución de pesos $D_t(i)$ sobre las muestras del dataset.
+	
+	\item \textbf{Algoritmo Paso a Paso:}
+	\begin{enumerate}
+		\item Inicializa los pesos de las muestras uniformemente: $D_1(i) = 1/N$.
+		\item Para cada iteración $t = 1, \dots, T$:
+		\begin{itemize}
+			\item Entrena un estimador débil $h_t(x)$ minimizando el error ponderado:
+			$$\epsilon_t = \sum_{i: y_i \neq h_t(x_i)} D_t(i)$$
+			\item Calcula la importancia/confianza del estimador en la decisión final:
+			$$\alpha_t = \frac{1}{2} \ln\left(\frac{1 - \epsilon_t}{\epsilon_t}\right)$$
+			\item Actualiza los pesos de las muestras incrementando la importancia de las mal clasificadas:
+			$$D_{t+1}(i) \propto D_t(i) \cdot \exp\left(-\alpha_t y_i h_t(x_i)\right)$$
+			\item Renormaliza $D_{t+1}$ para que forme una distribución válida que sume 1.
+		\end{itemize}
+		\item \textbf{Predicción Final:} Voto ponderado:
+		$$\hat{y} = \text{signo}\left(\sum_{t=1}^{T} \alpha_t h_t(x)\right)$$
+	\end{enumerate}
 \end{itemize}
-
-\begin{enumerate}
-
-\item Inicializa los pesos de las muestras uniformemente: \(D_1(i) = 1/N\).
-
-\item Para cada iteración \(t = 1, \dots, T\):
-
-\end{enumerate}
-
-\begin{itemize}
-
-\item Entrena un estimador débil \(h_t(x)\) minimizando el error ponderado:
-
-\end{itemize}
-
-       \$\$\textbackslash\{\}epsilon\_t = \textbackslash\{\}sum\_\{i: y\_i \textbackslash\{\}neq h\_t(x\_i)\} D\_t(i)\$\$
-
-\begin{itemize}
-
-\item Calcula la importancia/confianza del estimador en la decisión final:
-
-\end{itemize}
-
-       \$\$\textbackslash\{\}alpha\_t = \textbackslash\{\}frac\{1\}\{2\} \textbackslash\{\}ln\textbackslash\{\}left(\textbackslash\{\}frac\{1 - \textbackslash\{\}epsilon\_t\}\{\textbackslash\{\}epsilon\_t\}\textbackslash\{\}right)\$\$
-
-\begin{itemize}
-
-\item Actualiza los pesos de las muestras incrementando la importancia de las mal clasificadas:
-
-\end{itemize}
-
-       \$\$D\_\{t+1\}(i) \textbackslash\{\}propto D\_t(i) \textbackslash\{\}cdot \textbackslash\{\}exp\textbackslash\{\}left(-\textbackslash\{\}alpha\_t y\_i h\_t(x\_i)\textbackslash\{\}right)\$\$
-
-\begin{itemize}
-
-\item Renormaliza \(D_{t+1}\) para que forme una distribución válida que sume 1.
-
-\end{itemize}
-
-\begin{enumerate}
-
-\item \textbf{Predicción Final:} Voto ponderado:
-
-\end{enumerate}
-
-     \$\$\textbackslash\{\}hat\{y\} = \textbackslash\{\}text\{signo\}\textbackslash\{\}left(\textbackslash\{\}sum\_\{t=1\}\textasciicircum{}\{T\} \textbackslash\{\}alpha\_t h\_t(x)\textbackslash\{\}right)\$\$
 
 \subsubsection{3.2 Gradient Boosting y XGBoost}
 
 \begin{itemize}
-
-\item \textbf{Concepto Clave:} En lugar de reponderar muestras, cada nuevo árbol \(h_t(x)\) se ajusta directamente para predecir los \textbf{residuos} (o el gradiente negativo de la función de pérdida) del ensamble acumulado \(F_{t-1}(x)\).
-
-\item \textbf{Ajuste Aditivo:}
-
-\end{itemize}
-
-  \$\$F\_t(x) = F\_\{t-1\}(x) + \textbackslash\{\}nu h\_t(x)\$\$
-
-  donde \(\nu \in (0, 1]\) es el parámetro de tasa de aprendizaje (\emph{shrinkage}) que regula la contribución de cada nuevo árbol para evitar el sobreajuste.
-
-\begin{itemize}
-
-\item \textbf{Residuos para Error Cuadrático Medio (MSE):}
-
-\end{itemize}
-
-  \$\$r\_\{i, t-1\} = -\textbackslash\{\}left[ \textbackslash\{\}frac\{\textbackslash\{\}partial \textbackslash\{\}mathcal\{L\}(y\_i, F(x\_i))\}\{\textbackslash\{\}partial F(x\_i)\} \textbackslash\{\}right]\_\{F = F\_\{t-1\}\} = y\_i - F\_\{t-1\}(x\_i)\$\$
-
-\begin{itemize}
-
-\item **XGBoost (\emph{Extreme Gradient Boosting}):** Extensión altamente eficiente que incluye:
-
-\item Expansión de Taylor de segundo orden (utiliza tanto el gradiente de primer orden \(g_i\) como el Hessiano \(h_i\)).
-
-\item Regularización \(L_1\) (\(\alpha\)) y \(L_2\) (\(\lambda\)) sobre las hojas del árbol.
-
-\item Manejo automático e intrínseco de valores faltantes (\emph{sparse-aware split finding}).
-
+	\item \textbf{Concepto Clave:} En lugar de reponderar muestras, cada nuevo árbol $h_t(x)$ se ajusta directamente para predecir los \textbf{residuos} (o el gradiente negativo de la función de pérdida) del ensamble acumulado $F_{t-1}(x)$.
+	
+	\item \textbf{Ajuste Aditivo:}
+	$$F_t(x) = F_{t-1}(x) + \nu h_t(x)$$
+	donde $\nu \in (0, 1]$ es el parámetro de tasa de aprendizaje (\emph{shrinkage}) que regula la contribución de cada nuevo árbol para evitar el sobreajuste.
+	
+	\item \textbf{Residuos para Error Cuadrático Medio (MSE):}
+	$$r_{i, t-1} = -\left[ \frac{\partial \mathcal{L}(y_i, F(x_i))}{\partial F(x_i)} \right]_{F = F_{t-1}} = y_i - F_{t-1}(x_i)$$
+	
+	\item \textbf{XGBoost (\emph{Extreme Gradient Boosting}):} Extensión altamente eficiente que incluye:
+	\begin{itemize}
+		\item Expansión de Taylor de segundo orden (utiliza tanto el gradiente de primer orden $g_i$ como el Hessiano $h_i$).
+		\item Regularización $L_1$ ($\alpha$) y $L_2$ ($\lambda$) sobre las hojas del árbol.
+		\item Manejo automático e intrínseco de valores faltantes (\emph{sparse-aware split finding}).
+	\end{itemize}
 \end{itemize}
 
 \subsection{4. Descomposición Multiclase: OVA y OVO}
 
-Cuando un modelo de clasificación binario puro (ej. Regresión Logística, SVM) debe aplicarse a un problema de \(K\) clases, se emplean estrategias de descomposición:
+Cuando un modelo de clasificación binario puro (ej. Regresión Logística, SVM) debe aplicarse a un problema de $K$ clases, se emplean estrategias de descomposición:
 
-| Estrategia | Cantidad de Clasificadores | Configuración del Entrenamiento | Mecanismo de Predicción |
-
-| :--- | :--- | :--- | :--- |
-
-| \textbf{One-vs-All (OVA)} \emph{(One-vs-Rest)} | \(K\) clasificadores | El clasificador \(k\) se entrena con la clase \(k\) como positiva (+1) y todas las demás como negativas (-1). | Se asigna la clase cuyo clasificador entregue la mayor probabilidad o puntuación (\emph{logit}): \(\hat{y} = \arg\max_{k} f_k(x)\). |
-
-| \textbf{One-vs-One (OVO)} | \(\frac{K(K-1)}{2}\) clasificadores | Se entrena un clasificador para cada par único de clases \((c_i, c_j)\) ignorando el resto. | Cada sub-clasificador emite un voto por su clase preferida. Gana la clase con \textbf{mayor número de votos acumulados}. |
+\begin{table}[htbp]
+	\centering
+	\small
+	\begin{tabular}{|p{3cm}|p{2.5cm}|p{3.5cm}|p{4.5cm}|}
+		\hline
+		\textbf{Estrategia} & \textbf{Cantidad de Clasificadores} & \textbf{Configuración del Entrenamiento} & \textbf{Mecanismo de Predicción} \\ \hline
+		\textbf{One-vs-All (OVA)} \emph{(One-vs-Rest)} & $K$ clasificadores & El clasificador $k$ se entrena con la clase $k$ como positiva (+1) y todas las demás como negativas (-1). & Se asigna la clase cuyo clasificador entregue la mayor probabilidad o puntuación (\emph{logit}): $\hat{y} = \arg\max_{k} f_k(x)$. \\ \hline
+		\textbf{One-vs-One (OVO)} & $\frac{K(K-1)}{2}$ clasificadores & Se entrena un clasificador para cada par único de clases $(c_i, c_j)$ ignorando el resto. & Cada sub-clasificador emite un voto por su clase preferida. Gana la clase con \textbf{mayor número de votos acumulados}. \\ \hline
+	\end{tabular}
+\end{table}
 
 \subsection{5. Práctica y Aplicación en Código (Scikit-Learn)}
 
 \begin{lstlisting}[language=Python]
-
-import numpy as np
-
-from sklearn.datasets import make_classification
-
-from sklearn.model_selection import train_test_split
-
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
-
-from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
-
-from sklearn.svm import SVC
-
-from sklearn.metrics import accuracy_score
-
-
-
-# --------------------------------------------------------------------------
-
-# 1. Generación de Dataset Sintético Multiclase (K = 4 clases)
-
-# --------------------------------------------------------------------------
-
-X, y = make_classification(
-
-    n_samples=1000, 
-
-    n_features=20, 
-
-    n_informative=12, 
-
-    n_classes=4, 
-
-    random_state=42
-
-)
-
-
-
-X_train, X_test, y_train, y_test = train_test_split(
-
-    X, y, test_size=0.2, random_state=42, stratify=y
-
-)
-
-
-
-# --------------------------------------------------------------------------
-
-# 2. Comparativa de Ensembles (Random Forest, AdaBoost, Gradient Boosting)
-
-# --------------------------------------------------------------------------
-
-def train_and_evaluate_ensembles(X_tr, y_tr, X_te, y_te):
-
-    models = {
-
-        "Random Forest": RandomForestClassifier(
-
-            n_estimators=100, max_features="sqrt", random_state=42
-
-        ),
-
-        "AdaBoost": AdaBoostClassifier(
-
-            n_estimators=50, learning_rate=0.1, random_state=42
-
-        ),
-
-        "Gradient Boosting": GradientBoostingClassifier(
-
-            n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42
-
-        )
-
-    }
-
-    
-
-    print("--- Evaluación de Métodos de Ensamble ---")
-
-    for name, model in models.items():
-
-        model.fit(X_tr, y_tr)
-
-        preds = model.predict(X_te)
-
-        acc = accuracy_score(y_te, preds)
-
-        print(f"Modelo: {name:<20} | Test Accuracy: {acc:.4f}")
-
-
-
-# --------------------------------------------------------------------------
-
-# 3. Estrategias de Descomposición Multiclase (OVA vs OVO)
-
-# --------------------------------------------------------------------------
-
-def train_multiclass_decomposition(X_tr, y_tr, X_te, y_te):
-
-    # Clasificador base binario
-
-    base_binary_clf = SVC(kernel='linear', C=1.0, random_state=42)
-
-    
-
-    # 1. One-vs-All (OVA / OvR)
-
-    ova_model = OneVsRestClassifier(base_binary_clf)
-
-    ova_model.fit(X_tr, y_tr)
-
-    ova_preds = ova_model.predict(X_te)
-
-    
-
-    # 2. One-vs-One (OVO)
-
-    ovo_model = OneVsOneClassifier(base_binary_clf)
-
-    ovo_model.fit(X_tr, y_tr)
-
-    ovo_preds = ovo_model.predict(X_te)
-
-    
-
-    print("\n--- Estrategias de Descomposición Multiclase ---")
-
-    print(f"Número de estimadores OVA (K=4)    : {len(ova_model.estimators_)}")
-
-    print(f"Accuracy OVA                       : {accuracy_score(y_te, ova_preds):.4f}")
-
-    
-
-    print(f"Número de estimadores OVO (K*(K-1)/2): {len(ovo_model.estimators_)}")
-
-    print(f"Accuracy OVO                       : {accuracy_score(y_te, ovo_preds):.4f}")
-
-
-
-if __name__ == "__main__":
-
-    train_and_evaluate_ensembles(X_train, y_train, X_test, y_test)
-
-    train_multiclass_decomposition(X_train, y_train, X_test, y_test)
-
+	import numpy as np
+	from sklearn.datasets import make_classification
+	from sklearn.model_selection import train_test_split
+	from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+	from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
+	from sklearn.svm import SVC
+	from sklearn.metrics import accuracy_score
+	
+	X, y = make_classification(
+	n_samples=1000, 
+	n_features=20, 
+	n_informative=12, 
+	n_classes=4, 
+	random_state=42
+	)
+	
+	X_train, X_test, y_train, y_test = train_test_split(
+	X, y, test_size=0.2, random_state=42, stratify=y
+	)
+	
+	def train_and_evaluate_ensembles(X_tr, y_tr, X_te, y_te):
+	models = {
+		"Random Forest": RandomForestClassifier(
+		n_estimators=100, max_features="sqrt", random_state=42
+		),
+		"AdaBoost": AdaBoostClassifier(
+		n_estimators=50, learning_rate=0.1, random_state=42
+		),
+		"Gradient Boosting": GradientBoostingClassifier(
+		n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42
+		)
+	}
+	
+	print("Evaluacion de Metodos de Ensamble")
+	for name, model in models.items():
+	model.fit(X_tr, y_tr)
+	preds = model.predict(X_te)
+	acc = accuracy_score(y_te, preds)
+	print(f"Modelo: {name} | Test Accuracy: {acc:.4f}")
+	
+	def train_multiclass_decomposition(X_tr, y_tr, X_te, y_te):
+	base_binary_clf = SVC(kernel='linear', C=1.0, random_state=42)
+	
+	ova_model = OneVsRestClassifier(base_binary_clf)
+	ova_model.fit(X_tr, y_tr)
+	ova_preds = ova_model.predict(X_te)
+	
+	ovo_model = OneVsOneClassifier(base_binary_clf)
+	ovo_model.fit(X_tr, y_tr)
+	ovo_preds = ovo_model.predict(X_te)
+	
+	print("Estrategias de Descomposicion Multiclase")
+	print(f"Numero de estimadores OVA (K=4): {len(ova_model.estimators_)}")
+	print(f"Accuracy OVA: {accuracy_score(y_te, ova_preds):.4f}")
+	
+	print(f"Numero de estimadores OVO: {len(ovo_model.estimators_)}")
+	print(f"Accuracy OVO: {accuracy_score(y_te, ovo_preds):.4f}")
+	
+	if __name__ == "__main__":
+	train_and_evaluate_ensembles(X_train, y_train, X_test, y_test)
+	train_multiclass_decomposition(X_train, y_train, X_test, y_test)
 \end{lstlisting}
-\section{Conexión con las prácticas}
-
-El notebook de ensembles conecta la combinación de estimadores con la evaluación empírica y permite contrastar estrategias OVA y OVO cuando aparecen varias clases.
-
-\subsection{Fuente práctica: \texttt{01\_04\_Ensembles.ipynb}}
-
-Ruta: code/Practice\_01/01\_04\_Ensembles.ipynb
-
-\textbf{Apartados detectados:} 01\_04 Ensembles; 1. Bagging and Random Forest; Step 1.1: Bagging with Decision Trees; Step 1.2: Random Forest (bagging + random subspace); Step 1.3: Study Random Forest parameters.
-
-Salidas gráficas almacenadas: 7.
-
-\textbf{Salida textual conservada:} \begin{quote}Training Accuracy: 1.0000 | Testing Accuracy: 0.9591 | Random Forest Training Accuracy: 1.0000 | Random Forest Testing Accuracy: 0.9357\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import BaggingClassifier
-from sklearn.model_selection import train_test_split
-
-# Create a decision tree classifier
-dt = DecisionTreeClassifier(random_state=42)
-
-# Create a bagging classifier
-bg = BaggingClassifier(
-    estimator=dt,
-    random_state=42
-)
-
-# Load the breast cancer dataset
-data = load_breast_cancer()
-
-X_train, X_test, y_train, y_test = train_test_split(
-    data.data,
-    data.target,
-    test_size=0.3,
-    random_state=42,
-    stratify=data.target
-)
-
-# Fit the bagging classifier
-bg.fit(X_train, y_train)
-
-\end{lstlisting}
-\section{Autoevaluación razonada}
-
-\subsection*{Pregunta} ¿Qué aporta bagging?
-
-\textbf{Solución.} Reduce la varianza al entrenar modelos sobre muestras bootstrap y combinar sus predicciones.
-
-\subsection*{Pregunta} ¿Cuántos clasificadores binarios requiere OVO para K clases?
-
-\textbf{Solución.} \$K(K-1)/2\$, uno por cada pareja de clases.
-\section{Fuentes y trazabilidad}
-
-\textbf{Nota personal:} apuntes/Apuntes del Tema 2 - Ensemble Models \& Multiclass Decomposition.md

@@ -6,590 +6,212 @@
 \subsubsection{1.1 Optimización Matemática vs. Aprendizaje Profundo}
 
 \begin{itemize}
-
-\item \textbf{Optimización Pura:} Su objetivo principal es minimizar una función objetivo \(\mathcal{L}(w)\) sobre un conjunto de datos de entrenamiento para reducir el error de entrenamiento.
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{Deep Learning:} Su verdadero objetivo es reducir el \textbf{error de generalización} (desempeño en datos no vistos del conjunto de prueba), combinando la minimización del error con técnicas para mitigar el sobreajuste (\emph{overfitting}).
-
+	\item \textbf{Optimización Pura:} Su objetivo principal es minimizar una función objetivo $\mathcal{L}(w)$ sobre un conjunto de datos de entrenamiento para reducir el error de entrenamiento.
+	
+	\item \textbf{Deep Learning:} Su verdadero objetivo es reducir el \textbf{error de generalización} (desempeño en datos no vistos del conjunto de prueba), combinando la minimización del error con técnicas para mitigar el sobreajuste (\emph{overfitting}).
 \end{itemize}
 
 \subsubsection{1.2 Retos en la Superficie de Pérdida}
 
 \begin{enumerate}
-
-\item \textbf{Mínimos Locales:} Puntos donde el gradiente es cero (\(\nabla f(x) = 0\)) y la matriz Hessiana es definida positiva. En redes profundas con alta dimensionalidad, la mayoría de los puntos críticos no son mínimos locales, sino puntos de silla.
-
+	\item \textbf{Mínimos Locales:} Puntos donde el gradiente es cero ($\nabla f(x) = 0$) y la matriz Hessiana es definida positiva. En redes profundas con alta dimensionalidad, la mayoría de los puntos críticos no son mínimos locales, sino puntos de silla.
+	
+	\item \textbf{Puntos de Silla (\emph{Saddle Points}):} Puntos donde el gradiente se anula, pero la matriz Hessiana posee autovalores tanto positivos como negativos (la función sube en algunas direcciones y baja en otras).
+	
+	\item \textbf{Desvanecimiento del Gradiente (\emph{Vanishing Gradients}):} Regiones extremadamente llanas de la superficie de pérdida (por ejemplo, en las zonas de saturación de $\tanh(x)$ o la sigmoide) donde $\Vert \nabla f(x)\Vert \approx 0$, ralentizando drásticamente la actualización de los parámetros.
 \end{enumerate}
-
-\begin{enumerate}
-
-\item **Puntos de Silla (\emph{Saddle Points}):** Puntos donde el gradiente se anula, pero la matriz Hessiana posee autovalores tanto positivos como negativos (la función sube en algunas direcciones y baja en otras).
-
-\end{enumerate}
-
-\begin{enumerate}
-
-\item **Desvanecimiento del Gradiente (\emph{Vanishing Gradients}):** Regiones extremadamente llanas de la superficie de pérdida (por ejemplo, en las zonas de saturación de \(\tanh(x)\) o la sigmoide) donde \(\Vert{}\nabla f(x)\Vert{} \approx 0\), ralentizando drásticamente la actualización de los parámetros.
-
-\end{enumerate}
-
-\begin{lstlisting}[language=Python]
-
-Superficie de Pérdida
-
-  │        /\
-
-  │       /  \   <- Máximo Local
-
-  │  ____/    \____
-
-  │ /              \  <- Punto de Silla (Hessiana con autovalores mixtos)
-
-  │/                \____
-
-  └─────────────────────── Mínimo Local / Global
-
-
-
-\end{lstlisting}
 
 \subsubsection{1.3 Convexidad y Series de Taylor}
 
 \begin{itemize}
-
-\item \textbf{Convexidad:} Un conjunto \(\mathcal{X}\) es convexo si el segmento que une cualquier par de puntos \(a, b \in \mathcal{X}\) está totalmente contenido en \(\mathcal{X}\). Una función \(f\) es convexa si:
-
+	\item \textbf{Convexidad:} Un conjunto $\mathcal{X}$ es convexo si el segmento que une cualquier par de puntos $a, b \in \mathcal{X}$ está totalmente contenido en $\mathcal{X}$. Una función $f$ es convexa si:
+	$$\lambda f(x) + (1-\lambda)f(x') \ge f(\lambda x + (1-\lambda)x'), \quad \forall \lambda \in [0, 1]$$
+	\emph{Propiedad clave:} En funciones estrictamente convexas, todo mínimo local es también un \textbf{mínimo global}. Aunque las funciones de pérdida en redes profundas son no convexas, exhiben comportamiento convexo en las vecindades inmediatas de los mínimos locales.
+	
+	\item \textbf{Expansión en Serie de Taylor:} Aproximación polinomial local de una función diferenciable $f(x)$ alrededor de un punto $x_0$:
+	$$f(x) \approx f(x_0) + \nabla f(x_0)^\top (x - x_0) + \frac{1}{2}(x - x_0)^\top \mathbf{H}(x - x_0)$$
+	donde $\mathbf{H}$ es la matriz Hessiana de segundas derivadas parciales ($\mathbf{H}_{ij} = \frac{\partial^2 f}{\partial x_i \partial x_j}$).
 \end{itemize}
-
-\$\$\textbackslash\{\}lambda f(x) + (1-\textbackslash\{\}lambda)f(x') \textbackslash\{\}ge f(\textbackslash\{\}lambda x + (1-\textbackslash\{\}lambda)x'), \textbackslash\{\}quad \textbackslash\{\}forall \textbackslash\{\}lambda \textbackslash\{\}in [0, 1]\$\$
-
-\begin{itemize}
-
-\item \emph{Propiedad clave:} En funciones estrictamente conexas, todo mínimo local es también un \textbf{mínimo global}. Aunque las funciones de pérdida en redes profundas son no convexas, exhiben comportamiento convexo en las vecindades inmediatas de los mínimos locales.
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{Expansión en Serie de Taylor:} Aproximación polinomial local de una función diferenciable \(f(x)\) alrededor de un punto \(x_0\):
-
-\end{itemize}
-
-\$\$f(x) \textbackslash\{\}approx f(x\_0) + \textbackslash\{\}nabla f(x\_0)\textasciicircum{}\textbackslash\{\}top (x - x\_0) + \textbackslash\{\}frac\{1\}\{2\}(x - x\_0)\textasciicircum{}\textbackslash\{\}top \textbackslash\{\}mathbf\{H\}(x - x\_0)\$\$
-
-donde \(\mathbf{H}\) es la matriz Hessiana de segundas derivadas parciales (\(\mathbf{H}_{ij} = \frac{\partial^2 f}{\partial x_i \partial x_j}\)).
 
 \subsection{2. Algoritmos de Descenso de Gradiente}
 
 \subsubsection{2.1 Descenso de Gradiente Unidimensional y Multivariante}
 
-Partiendo de la expansión de Taylor de primer orden \(f(x + \epsilon) \approx f(x) + \epsilon \nabla f(x)\), para garantizar la máxima disminución del valor de \(f\), debemos movernos en la dirección opuesta al gradiente (\(\epsilon = -\eta \nabla f(x)\) con \(\eta > 0\)):
-
-\$\$w\_\{t+1\} = w\_t - \textbackslash\{\}eta \textbackslash\{\}nabla f(w\_t)\$\$
-
-\begin{itemize}
-
-\item \textbf{Impacto de la Tasa de Aprendizaje (\(\eta\)):}
-
-\item Si \(\eta\) es demasiado pequeño: Convergencia extremadamente lenta.
-
-\end{itemize}
+Partiendo de la expansión de Taylor de primer orden $f(x + \epsilon) \approx f(x) + \epsilon \nabla f(x)$, para garantizar la máxima disminución del valor de $f$, debemos movernos en la dirección opuesta al gradiente ($\epsilon = -\eta \nabla f(x)$ con $\eta > 0$):
+$$w_{t+1} = w_t - \eta \nabla f(w_t)$$
 
 \begin{itemize}
-
-\item Si \(\eta\) es demasiado grande: Oscilaciones inestables e incapacidad para converger o divergencia.
-
+	\item \textbf{Impacto de la Tasa de Aprendizaje ($\eta$):}
+	\begin{itemize}
+		\item Si $\eta$ es demasiado pequeño: Convergencia extremadamente lenta.
+		\item Si $\eta$ es demasiado grande: Oscilaciones inestables e incapacidad para converger o divergencia.
+	\end{itemize}
 \end{itemize}
 
 \subsubsection{2.2 Variantes del Descenso de Gradiente según el Tamaño del Lote}
 
-| Variante | Tamaño del Lote (\emph{Batch Size}) | Ventajas | Inconvenientes |
-
-| --- | --- | --- | --- |
-
-| \textbf{Batch Gradient Descent} | Muestras totales \(N\) | Cálculo exacto del gradiente y convergencia suave. | Inviable en memoria RAM/GPU para datasets grandes; computacionalmente lento.
-
- |
-
-| \textbf{Stochastic Gradient Descent (SGD)} | \(1\) muestra (\(\vert{}B\vert{} = 1\)) | Actualizaciones muy rápidas; la varianza del estimador ayuda a escapar de mínimos locales.
-
- | Gradientes con altísima varianza, trayectoria en "zig-zag" muy ruidosa.
-
- |
-
-| \textbf{Mini-Batch SGD} | Lote pequeño (\(\vert{}B\vert{} \in [32, 512]\)) | \textbf{Estándar en la práctica:} Aprovecha la paralelizació en GPU/vectorización y suaviza el gradiente.
-
- | Requiere afinar la tasa de aprendizaje global \(\eta\).
-
- |
+\begin{table}[htbp]
+	\centering
+	\small
+	\begin{tabular}{|p{3cm}|p{2.5cm}|p{3.5cm}|p{4.5cm}|}
+		\hline
+		\textbf{Variante} & \textbf{Tamaño del Lote} & \textbf{Ventajas} & \textbf{Inconvenientes} \\ \hline
+		\textbf{Batch GD} & Muestras totales $N$ & Cálculo exacto y convergencia suave. & Inviable en memoria RAM/GPU para grandes datasets; lento. \\ \hline
+		\textbf{SGD} & $1$ muestra ($\vert B\vert = 1$) & Actualizaciones muy rápidas; ayuda a escapar de mínimos locales. & Gradientes con altísima varianza, trayectoria en "zig-zag" muy ruidosa. \\ \hline
+		\textbf{Mini-Batch SGD} & Lote pequeño ($\vert B\vert \in [32, 512]$) & \textbf{Estándar:} Aprovecha paralelización GPU y suaviza el gradiente. & Requiere afinar la tasa de aprendizaje global $\eta$. \\ \hline
+	\end{tabular}
+\end{table}
 
 \subsubsection{2.3 Método de Newton (Segundo Orden)}
 
 Aprovecha la curvatura local mediante la matriz Hessiana para calcular el paso óptimo:
-
-\$\$\textbackslash\{\}Delta x = -\textbackslash\{\}mathbf\{H\}\textasciicircum{}\{-1\} \textbackslash\{\}nabla f(x)\$\$
-
-\begin{itemize}
-
-\item \textbf{Ventaja:} Ajusta automáticamente la amplitud del paso sin depender fuertemente de \(\eta\).
-
-\end{itemize}
+$$\Delta x = -\mathbf{H}^{-1} \nabla f(x)$$
 
 \begin{itemize}
-
-\item \textbf{Desventaja:} Computacionalmente prohibitivo en Deep Learning (\(O(d^3)\) para invertir \(\mathbf{H}\) con millones de parámetros) y sensible a direcciones donde la Hessiana es definida negativa.
-
+	\item \textbf{Ventaja:} Ajusta automáticamente la amplitud del paso sin depender fuertemente de $\eta$.
+	\item \textbf{Desventaja:} Computacionalmente prohibitivo en Deep Learning ($O(d^3)$ para invertir $\mathbf{H}$ con millones de parámetros) y sensible a direcciones donde la Hessiana es definida negativa.
 \end{itemize}
 
 \subsection{3. Optimizadores Acelerados y Adaptativos}
 
-\begin{lstlisting}[language=Python]
-
-Evolución de Optimizadores:
-
-SGD ───► Momentum (Inercia v_t) ───► AdaGrad (Escalado por g²) ───► RMSProp (Promedio Móvil) ───► Adam (Momentum + RMSProp)
-
-
-
-\end{lstlisting}
-
 \subsubsection{3.1 Método del Momento (\emph{Momentum})}
 
-Introduce una variable de velocidad \(v_t\) que acumula los gradientes pasados como un promedio móvil ponderado exponencialmente (física de una bola rodando cuesta abajo):
-
-\$\$v\_t \textbackslash\{\}leftarrow \textbackslash\{\}beta v\_\{t-1\} + g\_t\$\$
-
-\$\$w\_t \textbackslash\{\}leftarrow w\_\{t-1\} - \textbackslash\{\}eta v\_t\$\$
+Introduce una variable de velocidad $v_t$ que acumula los gradientes pasados como un promedio móvil ponderado exponencialmente:
+$$v_t \leftarrow \beta v_{t-1} + g_t$$
+$$w_t \leftarrow w_{t-1} - \eta v_t$$
 
 \begin{itemize}
-
-\item \textbf{Propiedades:} Amortigua las oscilaciones en direcciones de alta varianza y acelera el avance a lo largo de barrancos de la superficie de pérdida. Típicamente \(\beta \approx 0.9\).
-
+	\item \textbf{Propiedades:} Amortigua las oscilaciones en direcciones de alta varianza y acelera el avance a lo largo de barrancos. Típicamente $\beta \approx 0.9$.
 \end{itemize}
 
 \subsubsection{3.2 AdaGrad (\emph{Adaptive Gradient Algorithm})}
 
-Adapta la tasa de aprendizaje de cada parámetro individualmente basándose en la suma acumulada de sus gradientes al cuadrado \(s_t\):
-
-\$\$s\_t \textbackslash\{\}leftarrow s\_\{t-1\} + g\_t \textbackslash\{\}odot g\_t\$\$
-
-\$\$w\_t \textbackslash\{\}leftarrow w\_\{t-1\} - \textbackslash\{\}frac\{\textbackslash\{\}eta\}\{\textbackslash\{\}sqrt\{s\_t + \textbackslash\{\}epsilon\}\} \textbackslash\{\}odot g\_t\$\$
+Adapta la tasa de aprendizaje de cada parámetro individualmente basándose en la suma acumulada de sus gradientes al cuadrado $s_t$:
+$$s_t \leftarrow s_{t-1} + g_t \odot g_t$$
+$$w_t \leftarrow w_{t-1} - \frac{\eta}{\sqrt{s_t + \epsilon}} \odot g_t$$
 
 \begin{itemize}
-
-\item \textbf{Propiedades:} Parámetros con actualizaciones frecuentes o grandes reciben tasas de aprendizaje efectivas más pequeñas, mientras que parámetros con actualizaciones raras o pequeñas reciben pasos más grandes.
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{Inconveniente:} \(s_t\) crece de forma monótona, haciendo que la tasa de aprendizaje efectiva tienda a cero y detenga el aprendizaje prematuramente.
-
+	\item \textbf{Inconveniente:} $s_t$ crece de forma monótona, haciendo que la tasa de aprendizaje efectiva tienda a cero y detenga el aprendizaje prematuramente.
 \end{itemize}
 
 \subsubsection{3.3 RMSProp y AdaDelta}
 
-Resuelven la acumulación desmedida de AdaGrad sustituyendo la suma por un promedio móvil con decaimiento exponencial (\emph{leaky average}) con parámetro \(\gamma \in (0, 1)\):
-
-\$\$s\_t \textbackslash\{\}leftarrow \textbackslash\{\}gamma s\_\{t-1\} + (1 - \textbackslash\{\}gamma) g\_t \textbackslash\{\}odot g\_t\$\$
-
-\$\$w\_t \textbackslash\{\}leftarrow w\_\{t-1\} - \textbackslash\{\}frac\{\textbackslash\{\}eta\}\{\textbackslash\{\}sqrt\{s\_t + \textbackslash\{\}epsilon\}\} \textbackslash\{\}odot g\_t\$\$
+Resuelven la acumulación desmedida de AdaGrad sustituyendo la suma por un promedio móvil con decaimiento exponencial con parámetro $\gamma \in (0, 1)$:
+$$s_t \leftarrow \gamma s_{t-1} + (1 - \gamma) g_t \odot g_t$$
+$$w_t \leftarrow w_{t-1} - \frac{\eta}{\sqrt{s_t + \epsilon}} \odot g_t$$
 
 \subsubsection{3.4 Adam (\emph{Adaptive Moment Estimation})}
 
-El optimizador más popular y robusto en la práctica. Combina los beneficios del \textbf{Momento} (estimación del primer momento / media \(v_t\)) y de \textbf{RMSProp} (estimación del segundo momento / varianza \(s_t\)), añadiendo una \textbf{corrección de sesgo} para evitar la deriva hacia cero durante las primeras iteraciones:
+Combina los beneficios del \textbf{Momento} ($v_t$) y de \textbf{RMSProp} ($s_t$), añadiendo una \textbf{corrección de sesgo}:
 
 \begin{enumerate}
-
-\item \textbf{Primer Momento (Momento):}
-
+	\item \textbf{Primer Momento:} $v_t \leftarrow \beta_1 v_{t-1} + (1 - \beta_1) g_t$
+	\item \textbf{Segundo Momento:} $s_t \leftarrow \beta_2 s_{t-1} + (1 - \beta_2) (g_t \odot g_t)$
+	\item \textbf{Corrección de Sesgo:} $\hat{v}_t = \frac{v_t}{1 - \beta_1^t}, \quad \hat{s}_t = \frac{s_t}{1 - \beta_2^t}$
+	\item \textbf{Actualización:} $w_t \leftarrow w_{t-1} - \frac{\eta}{\sqrt{\hat{s}_t} + \epsilon} \odot \hat{v}_t$
 \end{enumerate}
 
-\$\$v\_t \textbackslash\{\}leftarrow \textbackslash\{\}beta\_1 v\_\{t-1\} + (1 - \textbackslash\{\}beta\_1) g\_t\$\$
+\begin{quote}
+	Hiperparámetros por defecto estándar: $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$.
+\end{quote}
 
-\begin{enumerate}
-
-\item \textbf{Segundo Momento (RMSProp):}
-
-\end{enumerate}
-
-\$\$s\_t \textbackslash\{\}leftarrow \textbackslash\{\}beta\_2 s\_\{t-1\} + (1 - \textbackslash\{\}beta\_2) (g\_t \textbackslash\{\}odot g\_t)\$\$
-
-\begin{enumerate}
-
-\item **Corrección de Sesgo (\emph{Bias Correction}):**
-
-\end{enumerate}
-
-\$\$\textbackslash\{\}hat\{v\}\_t = \textbackslash\{\}frac\{v\_t\}\{1 - \textbackslash\{\}beta\_1\textasciicircum{}t\}, \textbackslash\{\}quad \textbackslash\{\}hat\{s\}\_t = \textbackslash\{\}frac\{s\_t\}\{1 - \textbackslash\{\}beta\_2\textasciicircum{}t\}\$\$
-
-\begin{enumerate}
-
-\item \textbf{Actualización de Parámetros:}
-
-\end{enumerate}
-
-\$\$w\_t \textbackslash\{\}leftarrow w\_\{t-1\} - \textbackslash\{\}frac\{\textbackslash\{\}eta\}\{\textbackslash\{\}sqrt\{\textbackslash\{\}hat\{s\}\_t\} + \textbackslash\{\}epsilon\} \textbackslash\{\}odot \textbackslash\{\}hat\{v\}\_t\$\$
-
-\begin{quote}Hiperparámetros por defecto estándar: \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\epsilon = 10^{-8}\).\end{quote}
-
-\begin{quote}\end{quote}
-
-\begin{quote}\end{quote}
-
-\subsection{4. Polítas de Ajuste (\emph{Learning Rate Schedulers}) y Warmup}
+\subsection{4. Políticas de Ajuste (\emph{Learning Rate Schedulers}) y Warmup}
 
 \subsubsection{4.1 Planificadores de Tasa de Aprendizaje (\emph{Schedulers})}
 
-Reducen la tasa de aprendizaje \(\eta\) a medida que avanza el entrenamiento para evitar sobrepasar el mínimo local y permitir un ajuste fino:
-
+Reducen la tasa de aprendizaje $\eta$ a medida que avanza el entrenamiento para evitar sobrepasar el mínimo local:
 \begin{itemize}
-
-\item \textbf{Polynomial Decay:} \(\eta_t = \eta_0 \left(1 - \frac{t}{T}\right)^p\).
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{Step / Factor Decay:} \(\eta_{t+1} = \eta_t \cdot \alpha\) con \(\alpha \in (0, 1)\) cada \(k\) épocas.
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{Cosine Annealing:} Modula la tasa siguiendo una curva cosenoidal decreciente.
-
-\end{itemize}
-
-\begin{itemize}
-
-\item \textbf{ReduceLROnPlateau:} Reduce \(\eta\) por un factor cuando una métrica de validación deja de mejorar durante varias épocas.
-
+	\item \textbf{Polynomial Decay:} $\eta_t = \eta_0 \left(1 - \frac{t}{T}\right)^p$.
+	\item \textbf{Step / Factor Decay:} $\eta_{t+1} = \eta_t \cdot \alpha$ con $\alpha \in (0, 1)$ cada $k$ épocas.
+	\item \textbf{Cosine Annealing:} Modula la tasa siguiendo una curva cosenoidal decreciente.
+	\item \textbf{ReduceLROnPlateau:} Reduce $\eta$ por un factor cuando una métrica de validación deja de mejorar.
 \end{itemize}
 
 \subsubsection{4.2 Calentamiento (\emph{Warmup})}
 
-Consiste en iniciar con una tasa de aprendizaje muy pequeña durante las primeras épocas e incrementarla linealmente hasta el valor \(\eta_0\) antes de aplicar cualquier estrategia de decaimiento. Previene la desestabilización inicial de los pesos cuando los gradientes son excesivamente volátiles.
+Inicia con una tasa de aprendizaje muy pequeña durante las primeras épocas e incrementarla linealmente hasta el valor $\eta_0$. Previene la desestabilización inicial de los pesos cuando los gradientes son excesivamente volátiles.
 
 \subsection{5. Práctica y Aplicación en Código (PyTorch)}
 
-A continuación se incluye una implementación completa en PyTorch que compara el uso de \textbf{SGD con Momentum}, \textbf{Adam} y un \textbf{Scheduler con Warmup}:
-
 \begin{lstlisting}[language=Python]
-
-import torch
-
-import torch.nn as nn
-
-import torch.optim as optim
-
-from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau
-
-
-
-# --------------------------------------------------------------------------
-
-# 1. Definición de una Red de Prueba
-
-# --------------------------------------------------------------------------
-
-class DummyNet(nn.Module):
-
-    def __init__(self, input_dim=10, num_classes=2):
-
-        super(DummyNet, self).__init__()
-
-        self.fc = nn.Sequential(
-
-            nn.Linear(input_dim, 32),
-
-            nn.ReLU(),
-
-            nn.Linear(32, num_classes)
-
-        )
-
-        
-
-    def forward(self, x):
-
-        return self.fc(x)
-
-
-
-# --------------------------------------------------------------------------
-
-# 2. Configuración de Optimizadores en PyTorch
-
-# --------------------------------------------------------------------------
-
-def setup_optimizers(model):
-
-    # a) SGD con Momentum y Weight Decay
-
-    optimizer_sgd = optim.SGD(
-
-        model.parameters(), 
-
-        lr=0.01, 
-
-        momentum=0.9, 
-
-        weight_decay=1e-4
-
-    )
-
-    
-
-    # b) Adam (Adaptive Moment Estimation)
-
-    optimizer_adam = optim.Adam(
-
-        model.parameters(), 
-
-        lr=0.001, 
-
-        betas=(0.9, 0.999), 
-
-        eps=1e-8
-
-    )
-
-    
-
-    return optimizer_sgd, optimizer_adam
-
-
-
-# --------------------------------------------------------------------------
-
-# 3. Implementación de Warmup + Cosine Decay Scheduler
-
-# --------------------------------------------------------------------------
-
-def get_warmup_scheduler(optimizer, warmup_epochs=5, max_epochs=50):
-
-    def lr_lambda(epoch):
-
-        if epoch < warmup_epochs:
-
-            # Incremento lineal durante el warmup
-
-            return float(epoch + 1) / float(warmup_epochs)
-
-        # Decaimiento pasados los epochs de warmup
-
-        return 0.5 * (1.0 + torch.cos(torch.tensor((epoch - warmup_epochs) / (max_epochs - warmup_epochs) * 3.14159)))
-
-    
-
-    return LambdaLR(optimizer, lr_lambda=lr_lambda)
-
-
-
-# --------------------------------------------------------------------------
-
-# 4. Ejemplo de Bucle de Entrenamiento
-
-# --------------------------------------------------------------------------
-
-def train_demo():
-
-    model = DummyNet()
-
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-
-    scheduler = get_warmup_scheduler(optimizer, warmup_epochs=5, max_epochs=20)
-
-    criterion = nn.CrossEntropyLoss()
-
-    
-
-    # Entrada y etiquetas de prueba
-
-    inputs = torch.randn(16, 10)
-
-    labels = torch.randint(0, 2, (16,))
-
-    
-
-    print("--- Demostración de Entrenamiento con Scheduler ---")
-
-    for epoch in range(1, 21):
-
-        optimizer.zero_grad()
-
-        outputs = model(inputs)
-
-        loss = criterion(outputs, labels)
-
-        loss.backward()
-
-        optimizer.step()
-
-        
-
-        # Obtener LR actual
-
-        current_lr = optimizer.param_groups[0]['lr']
-
-        print(f"Época [{epoch:2d}/20] | Loss: {loss.item():.4f} | LR: {current_lr:.6f}")
-
-        
-
-        # Paso del scheduler al final de la época
-
-        scheduler.step()
-
-
-
-if __name__ == "__main__":
-
-    train_demo()
-
-
-
+	import torch
+	import torch.nn as nn
+	import torch.optim as optim
+	from torch.optim.lr_scheduler import LambdaLR
+	
+	class DummyNet(nn.Module):
+	def __init__(self, input_dim=10, num_classes=2):
+	super(DummyNet, self).__init__()
+	self.fc = nn.Sequential(
+	nn.Linear(input_dim, 32),
+	nn.ReLU(),
+	nn.Linear(32, num_classes)
+	)
+	
+	def forward(self, x):
+	return self.fc(x)
+	
+	def setup_optimizers(model):
+	optimizer_sgd = optim.SGD(
+	model.parameters(), 
+	lr=0.01, 
+	momentum=0.9, 
+	weight_decay=1e-4
+	)
+	
+	optimizer_adam = optim.Adam(
+	model.parameters(), 
+	lr=0.001, 
+	betas=(0.9, 0.999), 
+	eps=1e-8
+	)
+	
+	return optimizer_sgd, optimizer_adam
+	
+	def get_warmup_scheduler(optimizer, warmup_epochs=5, max_epochs=50):
+	def lr_lambda(epoch):
+	if epoch < warmup_epochs:
+	return float(epoch + 1) / float(warmup_epochs)
+	return 0.5 * (1.0 + torch.cos(torch.tensor((epoch - warmup_epochs) / (max_epochs - warmup_epochs) * 3.14159)))
+	
+	return LambdaLR(optimizer, lr_lambda=lr_lambda)
+	
+	def train_demo():
+	model = DummyNet()
+	optimizer = optim.Adam(model.parameters(), lr=1e-3)
+	scheduler = get_warmup_scheduler(optimizer, warmup_epochs=5, max_epochs=20)
+	criterion = nn.CrossEntropyLoss()
+	
+	inputs = torch.randn(16, 10)
+	labels = torch.randint(0, 2, (16,))
+	
+	print("Demostraciod de Entrenamiento con Scheduler")
+	for epoch in range(1, 21):
+	optimizer.zero_grad()
+	outputs = model(inputs)
+	loss = criterion(outputs, labels)
+	loss.backward()
+	optimizer.step()
+	
+	current_lr = optimizer.param_groups[0]['lr']
+	print(f"Epoca [{epoch:2d}/20] | Loss: {loss.item():.4f} | LR: {current_lr:.6f}")
+	
+	scheduler.step()
+	
+	if __name__ == "__main__":
+	train_demo()
 \end{lstlisting}
 
-¿Hay algún punto o demostración de este bloque de optimizadores sobre el que quieras profundizar o tienes alguna duda específica?
 \section{Conexión con las prácticas}
 
 Las prácticas comparan optimizadores y schedulers en experimentos con datos y pérdidas observables. Las curvas incluidas en las salidas permiten discutir velocidad, estabilidad y sensibilidad al learning rate.
 
-\subsection{Fuente práctica: \texttt{08\_01\_GradientDescent\_Lab.ipynb}}
 
-Ruta: code/08\_01\_GradientDescent/08\_01\_GradientDescent\_Lab.ipynb
-
-\textbf{Apartados detectados:} Experiments.
-
-Salidas gráficas almacenadas: 2.
-
-\textbf{Salida textual conservada:} \begin{quote}<matplotlib.collections.PathCollection at 0x727622433ed0> | <Figure size 640x480 with 1 Axes> | --- Running Experiment: SGD (batch\_size = 1) --- | Training Model: 100\%|████████████████████████████████████████████████████████████████████| 20/20 [00:26<00:00,  1.34s/epoch, Train Loss=0.5167, Val Loss=0.5170, Val Acc=0.8775, LR=0.000010]\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import numpy as np
-import torch
-import torch.nn as nn
-from sklearn.datasets import make_moons
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-import time
-
-\end{lstlisting}
-
-\subsection{Fuente práctica: \texttt{08\_02\_Optimizers\_Lab.ipynb}}
-
-Ruta: code/08\_01\_GradientDescent/08\_02\_Optimizers\_Lab.ipynb
-
-Salidas gráficas almacenadas: 2.
-
-\textbf{Salida textual conservada:} \begin{quote}<matplotlib.contour.QuadContourSet at 0x7eec04143cb0> | <Figure size 800x600 with 1 Axes> | <Figure size 1600x600 with 2 Axes> | Optimizer                    | Final Point (x, y)     | Final Loss\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
-
-\end{lstlisting}
-
-\subsection{Fuente práctica: \texttt{08\_03\_ExploringTorchOptim.ipynb}}
-
-Ruta: code/08\_01\_GradientDescent/08\_03\_ExploringTorchOptim.ipynb
-
-\textbf{Apartados detectados:} Dataset 1; Dataset 2.
-
-Salidas gráficas almacenadas: 8.
-
-\textbf{Salida textual conservada:} \begin{quote}<Figure size 1800x500 with 3 Axes> | Entrenando: SGD | Constant LR... | Entrenando: SGD | Polynomial decay... | Entrenando: SGD | Multifactor scheduler...\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader, TensorDataset
-
-\end{lstlisting}
-
-\subsection{Fuente práctica: \texttt{02\_03\_AutogradExercise.ipynb}}
-
-Ruta: code/Practice\_02/02\_03\_AutogradExercise.ipynb
-
-\textbf{Apartados detectados:} Mathematical Foundations. Automatic differentiation with PyTorch. Exercise.
-
-Salidas gráficas almacenadas: 0.
-
-\textbf{Salida textual conservada:} \begin{quote}x = 1.0, y = 2.0 | f(x, y) = 6.0 | df/dx = 12.0 | df/dy = 3.0\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import torch
-
-
-def f(x, y):
-    n = int(torch.floor(torch.abs(y)).item()) + 1
-    if y > 0:
-        c =  sum(x**k * y for k in range(1, n + 1))
-    else:
-        c = torch.log(1 + x**2 + y**2)
-    return c
-
-\end{lstlisting}
-
-\subsection{Fuente práctica: \texttt{02\_04\_Autograd\_Lab.ipynb}}
-
-Ruta: code/Practice\_02/02\_04\_Autograd\_Lab.ipynb
-
-\textbf{Apartados detectados:} Optimization with autograd.
-
-Salidas gráficas almacenadas: 1.
-
-\textbf{Salida textual conservada:} \begin{quote}<Figure size 800x600 with 1 Axes> | tensor(6968273.5000, grad\_fn=<AddBackward0>) | tensor(8966329., grad\_fn=<AddBackward0>)\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-c = torch.tensor([[0.0, 10.0], [1.0, 1.0], [12.0, 2.0], [15.0, 11.0], [8.0, 15.0], [5.0, 7.0]], requires_grad=True)
-w = torch.tensor([250000, 100000, 80000, 400000, 1500, 30000])
-
-\end{lstlisting}
 \section{Autoevaluación razonada}
 
 \subsection*{Pregunta} ¿Qué problema intenta aliviar momentum?
-
 \textbf{Solución.} La oscilación y el avance lento en direcciones con curvaturas o escalas muy diferentes.
 
 \subsection*{Pregunta} ¿Por qué un scheduler modifica el learning rate?
-
 \textbf{Solución.} Para adaptar el tamaño de las actualizaciones durante el entrenamiento y favorecer convergencia o refinamiento final.
-\section{Fuentes y trazabilidad}
 
-\textbf{Diapositivas:}
-
-\begin{itemize}
-
-\item \path{slides/08\_01\_Optimizers.pdf}
-
-\item \path{slides/08\_02\_Optimizers2.pdf}
-
-\end{itemize}
-
-\textbf{Nota personal:} apuntes/Apuntes del Tema 8 - Descenso de Gradiente, Métodos Acelerados y Adaptativos.md

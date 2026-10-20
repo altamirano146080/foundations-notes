@@ -1,68 +1,38 @@
 \chapter{Regresión logística}
-\textit{Este capítulo se construye a partir de las fuentes de diapositivas y notebook indicadas al final.}
-\section{Conexión con las prácticas}
 
-El notebook implementa la sigmoide y el entrenamiento, visualiza la frontera de decisión, añade features polinomiales y compara regularización L1/L2 mediante selección y validación cruzada.
+\section{Apuntes del Tema 4: Regresión Logística}
 
-\subsection{Fuente práctica: \texttt{04\_01\_Logistic\_regression.ipynb}}
-
-Ruta: code/04\_01\_Logistic\_regression/04\_01\_Logistic\_regression.ipynb
-
-\textbf{Apartados detectados:} 04\_01 Logistic regression; 1. Generate and visualize a synthetic dataset; 2. Implement logistic regression training loop; 3. Logistic regression with `torch.sigmoid`, SGD optimizer, and built-in losses; 4. Visualize decision boundary on the training data.
-
-Salidas gráficas almacenadas: 7.
-
-\textbf{Salida textual conservada:} \begin{quote}X shape: torch.Size([400, 2]) | y shape: torch.Size([400, 1]) | X\_tr: torch.Size([320, 2]) | y\_tr: torch.Size([320, 1])\end{quote}
-
-\textbf{Fragmento representativo:}
-
-\begin{lstlisting}[language=Python]
-
-import numpy as np
-import torch
-import matplotlib.pyplot as plt
-
-# 1. Reproducibility
-seed = 123
-np.random.seed(seed)
-torch.manual_seed(seed)
-
-# 2. Dataset size
-n_per_class = 200
-n = 400
-
-# 3. Define class distributions
-
-mu_0 = torch.tensor([-1.0, 0.0])
-cov_0 = torch.tensor([
-    [0.8, 0.2],
-    [0.2, 0.6]
-])
-
-mu_1 = torch.tensor([1.2, 0.6])
-cov_1 = torch.tensor([
-    [0.7, -0.25],
-    [-0.25, 0.6]
-])
-
-dist_0 = torch.distributions.MultivariateNormal(mu_0, cov_0)
-
-\end{lstlisting}
-\section{Autoevaluación razonada}
-
-\subsection*{Pregunta} ¿Por qué la salida logística puede interpretarse como probabilidad?
-
-\textbf{Solución.} La sigmoide transforma el logit real en un valor del intervalo (0,1), que se usa como probabilidad modelada.
-
-\subsection*{Pregunta} ¿Qué riesgo introduce un polinomio de grado alto?
-
-\textbf{Solución.} Puede aumentar la flexibilidad y también el sobreajuste, por lo que se necesita regularización y validación.
-\section{Fuentes y trazabilidad}
-
-\textbf{Diapositivas:}
-
+\subsection{1. Concepto y Función Sigmoide}
 \begin{itemize}
+	\item \textbf{Objetivo:} Clasificación binaria prediciendo $P(y=1|x) \in (0,1)$.
+	\item \textbf{Sigmoide:} $\sigma(z) = \frac{1}{1 + e^{-z}}$, donde $z = x^\top w + b$.
+\end{itemize}
 
-\item \path{slides/04\_Logistic\_regression.pdf}
+\subsection{2. Función de Pérdida (BCE)}
+\begin{itemize}
+	\item \textbf{Binary Cross-Entropy:} $\mathcal{L} = - [ y \log(\hat{y}) + (1 - y) \log(1 - \hat{y}) ]$.
+	\item \textbf{Propiedad:} Estrictamente convexa, garantiza convergencia al mínimo global.
+	\item \textbf{Derivación Probabilística:} Equivalente a la Máxima Verosimilitud (MLE) bajo una distribución de Bernoulli.
+\end{itemize}
 
+\subsection{3. Regularización ($L_1$ y $L_2$)}
+\begin{itemize}
+	\item \textbf{Ridge ($L_2$):} Penaliza $w^2$ (esfera), reduce magnitud de pesos.
+	\item \textbf{Lasso ($L_1$):} Penaliza $|w|$ (diamante), induce dispersión (\emph{sparsity}), lleva pesos a cero.
+\end{itemize}
+
+\subsection{4. Práctica}
+\begin{lstlisting}[language=Python]
+	# Pipeline de Scikit-Learn con escalado, poly y logistic
+	pipeline = Pipeline([
+	('scaler', StandardScaler()),
+	('poly', PolynomialFeatures(degree=2)),
+	('logistic', LogisticRegression(penalty='l2'))
+	])
+\end{lstlisting}
+
+\section{Autoevaluación}
+\begin{itemize}
+	\item \textbf{P:} ¿Por qué la salida logística es una probabilidad? \textbf{R:} La sigmoide mapea el espacio real al intervalo $(0,1)$.
+	\item \textbf{P:} ¿Riesgo de polinomio grado alto? \textbf{R:} Sobreajuste; requiere regularización.
 \end{itemize}
