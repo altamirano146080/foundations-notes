@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.15)  21 OCT 2026 00:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.15)  21 OCT 2026 01:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -805,7 +805,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.47 ...ine {4.2}Autoevaluación}{14}{section.4.2}
+l.47 ...ine {4.2}Autoevaluación}{16}{section.4.2}
                                                   % [1
 
 ]
@@ -1175,7 +1175,10 @@ Chapter 11.
 
 [50
 
-])
+]
+Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
+nput line 55.
+)
 
 [51] (main.aux)
  ***********
@@ -1184,46 +1187,54 @@ L3 programming layer <2024-09-10>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 21601 strings out of 473891
- 345266 string characters out of 5726314
+ 21592 strings out of 473891
+ 345099 string characters out of 5726314
  1341652 words of memory out of 5000000
- 42853 multiletter control sequences out of 15000+600000
- 712472 words of font info for 319 fonts, out of 8000000 for 9000
+ 42850 multiletter control sequences out of 15000+600000
+ 712638 words of font info for 321 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  80i,15n,82p,1050b,2181s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx10.pf
-b><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx8.pfb
-><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbxi10.pf
-b><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmex10.pf
-b><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi10.pf
-b><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi12.pf
-b><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi5.pfb
-><C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi6.pfb>
-<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi7.pfb><
-C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi8.pfb><C
-:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr10.pfb><C:
-/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr5.pfb><C:/U
-sers/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr6.pfb><C:/Use
-rs/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr7.pfb><C:/Users
-/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr8.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmri10.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmss10.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmss12.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmssbo10.pfb><C:/Users
-/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmssbx10.pfb><C:/Use
-rs/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Use
-rs/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy5.pfb><C:/User
-s/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy6.pfb><C:/Users
-/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><C:/Users/
-ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy8.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/Users/r
-uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtti10.pfb><C:/Users/
-ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.
-pfb>
-Output written on main.pdf (52 pages, 904813 bytes).
+
+pdfTeX warning (dest): name{section.11.3} has been referenced but does not exis
+t, replaced by a fixed one
+
+
+pdfTeX warning (dest): name{subsection.11.2.1} has been referenced but does not
+ exist, replaced by a fixed one
+
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx10.pfb>
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx8.pfb><
+C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbxi10.pfb>
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmex10.pfb>
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi10.pfb>
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi12.pfb>
+<C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi5.pfb><
+C:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi6.pfb><C
+:/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi7.pfb><C:
+/Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmi8.pfb><C:/
+Users/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr10.pfb><C:/U
+sers/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr5.pfb><C:/Use
+rs/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr6.pfb><C:/Users
+/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr7.pfb><C:/Users/r
+uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr8.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmri10.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmss10.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmss12.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmssbo10.pfb><C:/Users/r
+uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmssbx10.pfb><C:/Users
+/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Users
+/ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy5.pfb><C:/Users/
+ruth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy6.pfb><C:/Users/r
+uth_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><C:/Users/ru
+th_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy8.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/Users/rut
+h_/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtti10.pfb><C:/Users/ru
+th_/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pf
+b>
+Output written on main.pdf (52 pages, 906245 bytes).
 PDF statistics:
- 1775 PDF objects out of 2073 (max. 8388607)
- 874 named destinations out of 1000 (max. 500000)
- 89849 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 1774 PDF objects out of 2073 (max. 8388607)
+ 864 named destinations out of 1000 (max. 500000)
+ 89881 words of extra memory for PDF output out of 106986 (max. 10000000)
 

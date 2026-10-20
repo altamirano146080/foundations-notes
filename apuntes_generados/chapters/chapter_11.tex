@@ -1,59 +1,73 @@
 \chapter{Sistemas de recomendación}
-\textit{Este capítulo se construye a partir de las fuentes de diapositivas y notebook indicadas al final.}
-\section{Conexión con las prácticas}
+\section{Apuntes del Tema 13: Sistemas de recomendación}
 
-Este tema no tiene una nota Markdown equivalente en el repositorio; se incorpora como capítulo documentado desde sus diapositivas y notebook, manteniendo la trazabilidad de la fuente.
+\subsection{1. Introducción}
+\begin{itemize}
+	\item \textbf{Objetivo:} Filtrar información para sugerir ítems (productos, webs, series, canciones) que un usuario específico pueda encontrar interesantes.
+	\item \textbf{El problema de la recomendación:} Predecir la preferencia o interacción (rating, clic, compra) de un usuario $u$ sobre un ítem $i$.
+	\item \textbf{Ejemplo de intuición:} Si el Cliente X compra gafas hipster y un gorro, y el Cliente Y compra las mismas gafas, el sistema infiere que es probable que Y también compre el gorro basándose en el historial de X.
+\end{itemize}
 
-\subsection{Fuente práctica: \texttt{13\_01\_Recommender\_systems.ipynb}}
+\subsection{2. Content-Based Recommender Systems (Filtrado basado en contenido)}
+Se basan en las características (atributos) de los propios ítems y el perfil del usuario.
 
-Ruta: code/13\_01\_Recommender\_systems/13\_01\_Recommender\_systems.ipynb
+\begin{table}[htbp]
+	\centering
+	\small
+	\begin{tabular}{|p{5cm}|p{5cm}|}
+		\hline
+		\textbf{Ventajas} & \textbf{Desventajas} \\ \hline
+		No requiere datos de otros usuarios. & Extracción de características compleja. \\ \hline
+		Recomienda ítems nuevos o poco conocidos. & Problema del usuario nuevo (Cold start). \\ \hline
+		Interpretable y específico para gustos particulares. & Sobre-especialización (poco descubrimiento). \\ \hline
+	\end{tabular}
+\end{table}
 
-\textbf{Apartados detectados:} 13\_01 Recommender systems; Exercise 1 — Dataset: MovieLens 100K, Download \& Files; Exercise 2 — Train/Validation/Test Partition (Leave-Last-N per User); Exercise 3 — Content-Based Recommender; Exercise 4 — Ranking Metrics (Precision@K, Recall@K, NDCG@K).
+\subsection{3. Collaborative Filtering (Filtrado colaborativo)}
+Utiliza la matriz de interacciones (user-item) para encontrar patrones sin necesidad de conocer los atributos de los ítems.
 
-Salidas gráficas almacenadas: 0.
+\begin{itemize}
+	\item \textbf{User-User:} Encuentra usuarios similares al usuario objetivo y recomienda lo que ellos han consumido.
+	\item \textbf{Item-Item:} Encuentra ítems que suelen ser consumidos conjuntamente por el mismo grupo de usuarios.
+	\item \textbf{Latent Factors (Factores latentes):} Técnicas como la \emph{Matrix Factorization} (SVD, ALS) que descomponen la matriz de interacción en vectores de baja dimensión (embeddings) que capturan la "esencia" latente de usuarios e ítems.
+\end{itemize}
 
-\textbf{Salida textual conservada:} \begin{quote}Users: 943, Items: 1682, Genres: 19 | Exercise 1: all checks passed | train (98114, 6) unique users 943 unique items 1678 | valid (943, 6) unique users 943 unique items 534\end{quote}
+\subsection{4. Evaluación de Sistemas de Recomendación}
+La métrica depende de si el problema se trata como regresión o como ranking.
 
-\textbf{Fragmento representativo:}
+\begin{enumerate}
+	\item \textbf{Métricas de error (Regresión):} Usadas cuando predecimos ratings numéricos.
+	\begin{itemize}
+		\item MAE (Mean Absolute Error), MSE (Mean Squared Error), RMSE.
+	\end{itemize}
+	\item \textbf{Métricas de clasificación (Implicit feedback):} Útiles si determinamos si un ítem es relevante o no.
+	\begin{itemize}
+		\item \textbf{Precision@K:} Fracción de ítems relevantes dentro de los $K$ recomendados.
+		\item \textbf{Recall@K:} Fracción de ítems relevantes recuperados dentro de los $K$ frente al total de relevantes.
+	\end{itemize}
+	\item \textbf{Métricas de Ranking (Orden):} Miden la calidad del orden en la lista.
+	\begin{itemize}
+		\item NDCG (Normalized Discounted Cumulative Gain), RBP (Rank Biased Precision), ERR.
+	\end{itemize}
+\end{enumerate}
 
-\begin{lstlisting}[language=Python]
-
-# !pip install torch pandas numpy scikit-learn requests
-
-import copy
-import math
-import random
-import zipfile
-import requests
-import numpy as np
-import pandas as pd
-
-from pathlib import Path
-from typing import Callable, Dict, List, Tuple
-
-from sklearn.preprocessing import normalize
-
-import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader, RandomSampler
-
-SEED = 42
-random.seed(SEED)
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-NUM_GENRES = 19
-K = 10
-
+\subsection{5. Práctica y Aplicación en Código}
+\begin{lstlisting}[language=Python, caption=Carga y preparación básica para sistemas de recomendación]
+	# Uso de PyTorch para modelado de embeddings (ej. Matrix Factorization)
+	class RecommenderNet(nn.Module):
+	def __init__(self, num_users, num_items, emb_size=50):
+	super().__init__()
+	self.user_emb = nn.Embedding(num_users, emb_size)
+	self.item_emb = nn.Embedding(num_items, emb_size)
+	
+	def forward(self, user_idx, item_idx):
+	return (self.user_emb(user_idx) * self.item_emb(item_idx)).sum(1)
 \end{lstlisting}
+
 \section{Autoevaluación razonada}
 
 \subsection*{Pregunta} ¿Qué diferencia hay entre filtrado colaborativo y basado en contenido?
+\textbf{Solución.} El colaborativo explota la "sabiduría de la multitud" (interacciones), mientras que el basado en contenido explota las propiedades descriptivas de los objetos.
 
-\textbf{Solución.} El colaborativo usa patrones de interacción entre usuarios e ítems; el basado en contenido usa atributos de los ítems y preferencias observadas.
-
-\subsection*{Pregunta} ¿Por qué una métrica de recomendación debe definirse con cuidado?
-
-\textbf{Solución.} Porque precisión, ranking, cobertura y diversidad miden objetivos diferentes y pueden entrar en conflicto.
+\subsection*{Pregunta} ¿Por qué una métrica debe definirse con cuidado?
+\textbf{Solución.} La optimización de una métrica (ej. precisión) puede reducir otras (ej. diversidad), por lo que debemos alinear la métrica con el objetivo de negocio (ej. retención, descubrimiento o conversión).

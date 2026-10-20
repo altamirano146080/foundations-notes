@@ -167,6 +167,10 @@
 \contentsline {section}{\numberline {10.2}Conexión con las prácticas}{49}{section.10.2}%
 \contentsline {section}{\numberline {10.3}Autoevaluación razonada}{49}{section.10.3}%
 \contentsline {chapter}{\numberline {11}Sistemas de recomendación}{50}{chapter.11}%
-\contentsline {section}{\numberline {11.1}Conexión con las prácticas}{50}{section.11.1}%
-\contentsline {subsection}{\numberline {11.1.1}Fuente práctica: \texttt {13\_01\_Recommender\_systems.ipynb}}{50}{subsection.11.1.1}%
+\contentsline {section}{\numberline {11.1}Apuntes del Tema 13: Sistemas de recomendación}{50}{section.11.1}%
+\contentsline {subsection}{\numberline {11.1.1}1. Introducción}{50}{subsection.11.1.1}%
+\contentsline {subsection}{\numberline {11.1.2}2. Content-Based Recommender Systems (Filtrado basado en contenido)}{50}{subsection.11.1.2}%
+\contentsline {subsection}{\numberline {11.1.3}3. Collaborative Filtering (Filtrado colaborativo)}{50}{subsection.11.1.3}%
+\contentsline {subsection}{\numberline {11.1.4}4. Evaluación de Sistemas de Recomendación}{51}{subsection.11.1.4}%
+\contentsline {subsection}{\numberline {11.1.5}5. Práctica y Aplicación en Código}{51}{subsection.11.1.5}%
 \contentsline {section}{\numberline {11.2}Autoevaluación razonada}{51}{section.11.2}%
